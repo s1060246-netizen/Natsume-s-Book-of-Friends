@@ -1,0 +1,1864 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="友人帳" />
+  <title>友人帳｜水彩手繪契約簿</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: 毛筆書法字體 (Yuji Syuku) 與手寫楷體 (LXGW WenKai TC) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Yuji+Syuku&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg-paper: #F3EFE6;
+      --card-cloud: #FAF8F3;
+      --sky-blue-1: #6FB3D2;
+      --sky-blue-2: #A8D5E5;
+      --grass-green-1: #7DB865;
+      --grass-green-2: #A3CE8B;
+      --flower-pink: #D9B3B0;
+      --ink-charcoal: #383633;
+      --ink-muted: #787268;
+      --seal-red: #B83A2D;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-paper);
+      color: var(--ink-charcoal);
+      font-family: 'LXGW WenKai TC', -apple-system, BlinkMacSystemFont, sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    .font-brush {
+      font-family: 'Yuji Syuku', 'STKaiti', 'KaiTi', 'BiauKai', serif;
+    }
+
+    /* 水彩紙纖維紋理覆蓋層 */
+    .paper-texture {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 50;
+      opacity: 0.32;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.35'/%3E%3C/svg%3E");
+    }
+
+    /* 晴空水彩暈染頂部背景 */
+    .watercolor-sky {
+      background:
+        radial-gradient(ellipse at 18% 20%, rgba(111, 179, 210, 0.55) 0%, rgba(168, 213, 229, 0.25) 48%, transparent 75%),
+        radial-gradient(ellipse at 85% 30%, rgba(168, 213, 229, 0.65) 0%, rgba(111, 179, 210, 0.15) 55%, transparent 80%),
+        linear-gradient(180deg, rgba(168, 213, 229, 0.35) 0%, rgba(243, 239, 230, 0) 100%);
+    }
+
+    /* 草地水彩暈染區塊 */
+    .watercolor-grass {
+      background:
+        radial-gradient(ellipse at 15% 80%, rgba(125, 184, 101, 0.38) 0%, rgba(163, 206, 139, 0.18) 55%, transparent 80%),
+        radial-gradient(ellipse at 88% 70%, rgba(163, 206, 139, 0.42) 0%, transparent 70%),
+        var(--card-cloud);
+    }
+
+    /* 手繪不規則細線邊框 */
+    .sketch-box {
+      background-color: var(--card-cloud);
+      border: 1.5px solid var(--ink-charcoal);
+      border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+      box-shadow: 2px 3px 0px rgba(56, 54, 51, 0.08);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .sketch-pill {
+      border: 1.3px solid var(--ink-charcoal);
+      border-radius: 40px 12px 35px 14px / 14px 35px 12px 40px;
+    }
+
+    .sketch-avatar {
+      border: 1.5px solid var(--ink-charcoal);
+      border-radius: 52% 48% 46% 54% / 54% 46% 54% 46%;
+    }
+
+    /* 日誌拍立得照片手繪框 */
+    .sketch-photo {
+      border: 1.4px solid var(--ink-charcoal);
+      border-radius: 12px 4px 10px 6px / 6px 10px 4px 12px;
+      box-shadow: 1.5px 2px 0px rgba(56, 54, 51, 0.12);
+    }
+
+    .sketch-btn {
+      border: 1.5px solid var(--ink-charcoal);
+      border-radius: 18px 4px 16px 6px / 6px 16px 4px 18px;
+      box-shadow: 1.5px 2px 0px rgba(56, 54, 51, 0.16);
+      transition: all 0.12s ease;
+    }
+
+    .sketch-btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: 0px 0px 0px rgba(56, 54, 51, 0.16);
+    }
+
+    /* 原地編輯時的柔和虛線輸入框 */
+    .inline-edit-input {
+      background-color: #FCFBF7;
+      border: 1.3px dashed #6FB3D2;
+      border-radius: 10px;
+      padding: 3px 8px;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+    .inline-edit-input:focus {
+      outline: none;
+      border-style: solid;
+      border-color: var(--ink-charcoal);
+      background-color: #FFFFFF;
+    }
+
+    /* 原創朱紅方印 */
+    .seal-stamp {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border: 2px solid var(--seal-red);
+      color: var(--seal-red);
+      border-radius: 4px 2px 5px 3px;
+      font-family: 'Yuji Syuku', serif;
+      font-weight: bold;
+      font-size: 15px;
+      line-height: 1;
+      transform: rotate(-4deg);
+      background: rgba(184, 58, 45, 0.06);
+      user-select: none;
+    }
+
+    #signatureCanvas {
+      touch-action: none;
+      cursor: crosshair;
+      background-color: #FCFBF7;
+      background-image: radial-gradient(#D8D2C5 0.8px, transparent 0.8px);
+      background-size: 16px 16px;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .pb-safe {
+      padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 74px);
+    }
+    .nav-safe {
+      padding-bottom: env(safe-area-inset-bottom, 10px);
+    }
+  </style>
+</head>
+<body class="pb-safe selection:bg-[#A8D5E5]/50">
+
+  <!-- 水彩紙纖維紋理層 -->
+  <div class="paper-texture"></div>
+
+  <!-- 主容器 -->
+  <div class="max-w-md mx-auto min-h-screen relative">
+
+    <!-- 頂部晴空水彩暈染標題區 -->
+    <header class="watercolor-sky pt-10 pb-5 px-5 relative">
+      <svg class="w-28 h-12 absolute top-5 right-4 opacity-50 pointer-events-none" viewBox="0 0 140 60" fill="none">
+        <path d="M22 44 C10 44, 8 28, 22 26 C24 14, 46 12, 54 22 C66 14, 88 18, 90 30 C104 30, 106 44, 92 44 Z" stroke="#383633" stroke-width="1.3" stroke-linecap="round"/>
+        <path d="M36 33 C39 29, 45 30, 44 35" stroke="#383633" stroke-width="1.1" stroke-linecap="round"/>
+        <path d="M74 34 C78 30, 83 32, 81 36" stroke="#383633" stroke-width="1.1" stroke-linecap="round"/>
+      </svg>
+
+      <div class="flex items-end justify-between">
+        <div>
+          <div class="flex items-center gap-2.5">
+            <h1 class="font-brush text-4xl tracking-widest text-[#383633]">友人帳</h1>
+            <span class="seal-stamp">契</span>
+          </div>
+          <p class="text-xs text-[#655F56] mt-1 tracking-wide">以水彩與筆墨，記下每一次相遇的溫度</p>
+        </div>
+        <div class="text-right">
+          <span id="activeCountBadge" class="sketch-pill bg-[#FAF8F3]/80 px-3 py-1 text-xs font-bold">
+            契約 0 份
+          </span>
+        </div>
+      </div>
+
+      <!-- 近期壽星提醒橫幅 -->
+      <div id="birthdayBanner" class="hidden mt-4 sketch-box watercolor-grass p-3.5 cursor-pointer" onclick="switchTab('birthdays')">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5">
+            <svg class="w-6 h-6 shrink-0 text-[#4B7A38]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3v3M8 6h8M5 11h14v8a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-8z"/>
+              <path d="M5 15c2.5 1.5 4.5-1.5 7 0s4.5-1.5 7 0"/>
+            </svg>
+            <div>
+              <p class="text-xs font-bold text-[#365928]">近期生辰提醒</p>
+              <p id="birthdayBannerText" class="text-sm text-[#383633] mt-0.5"></p>
+            </div>
+          </div>
+          <span class="text-xs underline text-[#4B7A38] shrink-0">查看心願 →</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ==================== 分頁一：契約名錄 ==================== -->
+    <main id="tab-directory" class="px-4 space-y-4">
+      <div class="relative">
+        <input
+          id="searchInput"
+          type="text"
+          placeholder="搜尋姓名、暱稱、認識契機或情報..."
+          oninput="renderDirectory()"
+          class="w-full sketch-pill bg-[#FAF8F3] pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#6FB3D2]/50 placeholder:text-[#9A9388]"
+        />
+        <svg class="w-4 h-4 absolute left-3.5 top-3 text-[#787268]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+        </svg>
+      </div>
+
+      <div id="tagFilterBar" class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5"></div>
+      <div id="friendsList" class="space-y-3.5 pt-1"></div>
+    </main>
+
+    <!-- ==================== 分頁二：近期壽星與送禮心願 ==================== -->
+    <main id="tab-birthdays" class="hidden px-4 space-y-5">
+      <section>
+        <div class="flex items-center gap-2 mb-2.5">
+          <h2 class="font-brush text-2xl">生辰倒數</h2>
+          <span class="text-xs text-[#787268]">（未來 60 天內）</span>
+        </div>
+        <div id="upcomingBirthdaysList" class="space-y-2.5"></div>
+      </section>
+
+      <section class="pt-2">
+        <div class="flex items-center gap-2 mb-2.5">
+          <h2 class="font-brush text-2xl">待實現心願單</h2>
+          <span class="text-xs text-[#787268]">（平日記下的送禮靈感）</span>
+        </div>
+        <div id="wishlistSummaryList" class="space-y-2.5"></div>
+      </section>
+    </main>
+
+    <!-- ==================== 分頁三：已歸還封存與資料備份 ==================== -->
+    <main id="tab-archive" class="hidden px-4 space-y-5">
+      <section>
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="font-brush text-2xl">已歸還名錄</h2>
+          <span class="text-xs text-[#787268]">封存回憶並停止生日提醒</span>
+        </div>
+        <div id="archivedList" class="space-y-3"></div>
+      </section>
+
+      <section class="sketch-box p-4 space-y-3">
+        <h3 class="font-brush text-xl">友人帳備份與遷移</h3>
+        <p class="text-xs text-[#787268] leading-relaxed">
+          所有契約、手寫簽名與照片皆安全儲存於您的手機本機瀏覽器中。建議定期匯出 JSON 備份檔保存至 iCloud 或「檔案」App。
+        </p>
+        <div class="flex gap-2.5 pt-1">
+          <button onclick="exportBackup()" class="flex-1 sketch-btn bg-[#A8D5E5]/60 py-2.5 text-sm font-bold flex items-center justify-center gap-1.5">
+            <span>匯出完整備份</span>
+          </button>
+          <label class="flex-1 sketch-btn bg-[#FAF8F3] py-2.5 text-sm font-bold flex items-center justify-center gap-1.5 cursor-pointer">
+            <span>匯入還原</span>
+            <input type="file" accept=".json" class="hidden" onchange="importBackup(event)" />
+          </label>
+        </div>
+        <div class="pt-2 border-t border-dashed border-[#383633]/20 flex justify-between items-center">
+          <span class="text-xs text-[#787268]">測試用途</span>
+          <button onclick="resetDemoData()" class="text-xs text-[#B83A2D] underline">重設為初始範例資料</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- 右下角手繪懸浮新增按鈕 -->
+    <button
+      onclick="openCreateModal()"
+      aria-label="新增契約"
+      class="fixed right-5 bottom-24 z-30 sketch-btn bg-gradient-to-br from-[#A8D5E5] to-[#7DB865]/70 px-4 py-3 flex items-center gap-1.5 shadow-md"
+    >
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#383633" stroke-width="2" stroke-linecap="round">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      <span class="font-brush text-lg tracking-wider">立契</span>
+    </button>
+
+    <!-- 底部手繪細線導航列 -->
+    <nav class="fixed bottom-0 left-0 right-0 z-30 bg-[#FAF8F3]/95 backdrop-blur-sm border-t-[1.5px] border-[#383633] nav-safe">
+      <div class="max-w-md mx-auto flex justify-around items-center pt-2 pb-1">
+        <button onclick="switchTab('directory')" id="nav-directory" class="nav-item flex flex-col items-center px-4 py-1 text-[#383633] font-bold">
+          <svg class="w-5 h-5 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+          <span class="text-xs">名錄</span>
+        </button>
+
+        <button onclick="switchTab('birthdays')" id="nav-birthdays" class="nav-item flex flex-col items-center px-4 py-1 text-[#787268]">
+          <svg class="w-5 h-5 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+          </svg>
+          <span class="text-xs">生辰與心願</span>
+        </button>
+
+        <button onclick="switchTab('archive')" id="nav-archive" class="nav-item flex flex-col items-center px-4 py-1 text-[#787268]">
+          <svg class="w-5 h-5 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>
+          </svg>
+          <span class="text-xs">封存與備份</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- 共享的分類標籤建議清單 -->
+  <datalist id="tagSuggestions">
+    <option value="摯友"></option>
+    <option value="大學同學"></option>
+    <option value="職場夥伴"></option>
+    <option value="旅途偶遇"></option>
+  </datalist>
+
+  <!-- ==================== 彈窗 1：新增好友契約（立契） ==================== -->
+  <div id="createFriendModal" class="hidden fixed inset-0 z-40 bg-[#383633]/45 backdrop-blur-[2px] overflow-y-auto">
+    <div class="min-h-screen flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div class="w-full max-w-md bg-[#F3EFE6] border-t-2 sm:border-2 border-[#383633] rounded-t-3xl sm:rounded-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-[#383633]/20 pb-3">
+          <h2 class="font-brush text-2xl">立下新契約</h2>
+          <button onclick="closeCreateModal()" class="p-1.5 text-[#787268] hover:text-[#383633]">✕</button>
+        </div>
+
+        <!-- 頭像上傳 -->
+        <div class="flex items-center gap-4">
+          <div class="relative">
+            <img id="createAvatarPreview" src="" alt="頭像預覽" class="w-20 h-20 object-cover sketch-avatar bg-[#FAF8F3]" />
+            <button type="button" id="createRemoveAvatarBtn" onclick="clearCreateAvatar()" class="hidden absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[#FAF8F3] border border-[#383633] text-xs">✕</button>
+          </div>
+          <div class="flex-1 space-y-2">
+            <p class="text-xs text-[#787268]">代表影像（自動裁切壓縮）</p>
+            <label class="sketch-btn bg-[#FAF8F3] px-3 py-1.5 text-xs font-bold cursor-pointer inline-flex items-center gap-1">
+              <span>拍照 / 選圖</span>
+              <input type="file" accept="image/*" class="hidden" onchange="handleCreateAvatarUpload(event)" />
+            </label>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold mb-1">姓名 <span class="text-[#B83A2D]">*</span></label>
+            <input id="createName" type="text" placeholder="輸入對方名字" class="w-full sketch-pill bg-[#FAF8F3] px-3 py-2 text-sm focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">常用暱稱</label>
+            <input id="createNickname" type="text" placeholder="例如：阿Ken" class="w-full sketch-pill bg-[#FAF8F3] px-3 py-2 text-sm focus:outline-none" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold mb-1">生辰日期</label>
+            <input id="createBirthday" type="date" class="w-full sketch-pill bg-[#FAF8F3] px-3 py-2 text-sm focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">分類標籤</label>
+            <input id="createTag" type="text" placeholder="例如：大學同學" list="tagSuggestions" class="w-full sketch-pill bg-[#FAF8F3] px-3 py-2 text-sm focus:outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold mb-1">相遇契機</label>
+          <input id="createContext" type="text" placeholder="例如：2024 秋季登山社團認識" class="w-full sketch-pill bg-[#FAF8F3] px-3 py-2 text-sm focus:outline-none" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold mb-1">羈絆深淺</label>
+          <div id="createBondGroup" class="flex gap-2"></div>
+        </div>
+
+        <div class="sketch-box p-3.5 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold">手寫契約名諱</span>
+            <button type="button" onclick="openSignatureModal('create')" class="sketch-btn bg-[#A8D5E5]/55 px-3 py-1 text-xs font-bold">
+              開啟簽名畫布
+            </button>
+          </div>
+          <div class="h-24 bg-[#FCFBF7] border border-dashed border-[#383633]/40 rounded-xl flex items-center justify-center relative overflow-hidden">
+            <span id="createSigPlaceholder" class="text-xs text-[#9A9388]">尚未簽署（可遞給對方親筆簽名）</span>
+            <img id="createSigImg" src="" alt="簽名預覽" class="hidden max-h-20 object-contain" />
+            <span id="createSigSeal" class="hidden seal-stamp absolute bottom-2 right-2">契</span>
+          </div>
+        </div>
+
+        <div class="flex gap-3 pt-2">
+          <button type="button" onclick="closeCreateModal()" class="flex-1 sketch-btn bg-[#FAF8F3] py-2.5 text-sm">取消</button>
+          <button type="button" onclick="saveNewFriend()" class="flex-1 sketch-btn bg-[#7DB865]/75 py-2.5 text-sm font-bold">完成立契</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 彈窗 2：全螢幕毛筆感手寫簽名畫布 ==================== -->
+  <div id="signatureModal" class="hidden fixed inset-0 z-50 bg-[#F3EFE6] flex flex-col">
+    <div class="watercolor-sky px-5 pt-8 pb-4 border-b border-[#383633]/20 flex items-center justify-between">
+      <div>
+        <h3 class="font-brush text-2xl">請書寫名諱</h3>
+        <p class="text-xs text-[#655F56]">運筆速度越慢筆畫越濃厚，模擬毛筆提按手感</p>
+      </div>
+      <span class="seal-stamp">契</span>
+    </div>
+
+    <div class="flex-1 p-4 flex flex-col justify-center">
+      <div class="w-full h-72 sm:h-80 sketch-box overflow-hidden relative">
+        <canvas id="signatureCanvas" class="w-full h-full block"></canvas>
+        <span class="absolute bottom-2 left-3 text-[11px] text-[#9A9388] pointer-events-none">在此區域以手指簽名</span>
+      </div>
+    </div>
+
+    <div class="p-5 bg-[#FAF8F3] border-t border-[#383633] flex gap-3 nav-safe">
+      <button type="button" onclick="clearSignatureCanvas()" class="sketch-btn bg-[#FAF8F3] px-4 py-3 text-sm">清除重寫</button>
+      <button type="button" onclick="closeSignatureModal()" class="sketch-btn bg-[#FAF8F3] px-4 py-3 text-sm">取消</button>
+      <button type="button" onclick="confirmSignature()" class="flex-1 sketch-btn bg-[#A8D5E5]/80 py-3 text-sm font-bold">確認簽署並蓋印</button>
+    </div>
+  </div>
+
+  <!-- ==================== 彈窗 3：好友契約詳情頁（支援原地 iPhone 式直接編輯） ==================== -->
+  <div id="detailModal" class="hidden fixed inset-0 z-40 bg-[#F3EFE6] overflow-y-auto">
+    <div class="max-w-md mx-auto min-h-screen pb-28">
+      <!-- 頂部導航 -->
+      <div class="watercolor-sky px-4 pt-8 pb-5">
+        <!-- 瀏覽模式頂部按鈕列 -->
+        <div id="detailViewHeader" class="flex items-center justify-between mb-4">
+          <button onclick="closeDetailModal()" class="sketch-btn bg-[#FAF8F3]/90 px-3 py-1.5 text-xs font-bold">← 返回名錄</button>
+          <div class="flex gap-2">
+            <button onclick="enterDetailEditMode()" class="sketch-btn bg-[#FAF8F3]/90 px-3.5 py-1.5 text-xs font-bold">編輯</button>
+            <button id="detailArchiveBtn" class="sketch-btn bg-[#D9B3B0]/60 px-3 py-1.5 text-xs font-bold">歸還名字</button>
+          </div>
+        </div>
+
+        <!-- 編輯模式頂部提示列 -->
+        <div id="detailEditHeader" class="hidden flex items-center justify-between mb-4">
+          <span class="sketch-pill bg-[#A8D5E5]/60 px-3 py-1 text-xs font-bold">正在修訂契約內容</span>
+          <span class="text-xs text-[#655F56]">點擊欄位即可直接修改</span>
+        </div>
+
+        <!-- 好友主資訊卡片 -->
+        <div class="sketch-box p-4 relative">
+          <div class="flex items-start gap-3.5">
+            <!-- 頭像區 -->
+            <div class="relative shrink-0">
+              <img id="detailAvatar" src="" alt="頭像" class="w-16 h-16 object-cover sketch-avatar bg-[#F3EFE6]" />
+              <label id="detailAvatarEditOverlay" class="hidden absolute inset-0 rounded-full bg-[#383633]/55 text-[#FAF8F3] flex flex-col items-center justify-center cursor-pointer text-[10px] font-bold">
+                <span>更換</span>
+                <input type="file" accept="image/*" class="hidden" onchange="handleDetailAvatarUpload(event)" />
+              </label>
+              <button
+                id="detailAvatarRemoveBtn"
+                type="button"
+                onclick="clearDetailAvatar()"
+                class="hidden absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#FAF8F3] border border-[#383633] text-[10px] leading-none flex items-center justify-center"
+                title="恢復預設頭像"
+              >✕</button>
+            </div>
+
+            <!-- 姓名 / 暱稱 / 標籤 / 生日 -->
+            <div class="flex-1 min-w-0">
+              <div id="detailIdentityView">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h2 id="detailName" class="font-brush text-3xl truncate"></h2>
+                  <span id="detailNickname" class="text-xs text-[#787268]"></span>
+                </div>
+                <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <span id="detailTag" class="sketch-pill bg-[#A3CE8B]/40 px-2.5 py-0.5 text-xs"></span>
+                  <span id="detailBirthdayText" class="text-xs text-[#5A554C]"></span>
+                </div>
+                <div id="detailBondView" class="text-[11px] text-[#787268] mt-1.5 tracking-widest"></div>
+              </div>
+
+              <div id="detailIdentityEdit" class="hidden space-y-2">
+                <div class="flex items-center gap-1.5">
+                  <input id="editDetailName" type="text" placeholder="姓名 *" class="w-1/2 font-brush text-xl inline-edit-input" />
+                  <input id="editDetailNickname" type="text" placeholder="暱稱" class="w-1/2 text-xs inline-edit-input" />
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <input id="editDetailTag" type="text" placeholder="分類標籤" list="tagSuggestions" class="w-5/12 text-xs inline-edit-input" />
+                  <input id="editDetailBirthday" type="date" class="w-7/12 text-xs inline-edit-input" />
+                </div>
+                <div class="flex items-center gap-1 pt-0.5">
+                  <span class="text-[11px] text-[#787268] mr-1">羈絆：</span>
+                  <div id="editDetailBondGroup" class="flex gap-1"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 相遇契機 -->
+          <div class="mt-3 pt-2.5 border-t border-dashed border-[#383633]/20">
+            <p id="detailContext" class="text-xs text-[#655F56]"></p>
+            <div id="detailContextEditWrap" class="hidden">
+              <label class="block text-[11px] text-[#787268] mb-1">相遇契機</label>
+              <input id="editDetailContext" type="text" placeholder="記錄你們如何認識..." class="w-full text-xs inline-edit-input" />
+            </div>
+          </div>
+
+          <!-- 手寫簽名展示 -->
+          <div id="detailSignatureWrap" class="hidden mt-3 bg-[#FCFBF7] rounded-xl p-2.5 border border-[#383633]/20 flex items-center justify-between gap-2">
+            <span class="text-[11px] text-[#787268] shrink-0">親筆契約</span>
+            <img id="detailSignatureImg" src="" alt="親筆簽名" class="h-14 object-contain" />
+            <span id="detailSignatureEmptyHint" class="hidden text-xs text-[#9A9388]">尚未簽署</span>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button id="detailResignBtn" type="button" onclick="openSignatureModal('detail')" class="hidden sketch-btn bg-[#A8D5E5]/60 px-2.5 py-1 text-[11px] font-bold">
+                簽署 / 重簽
+              </button>
+              <span id="detailSealStamp" class="seal-stamp">契</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 詳情內部分頁切換：情報心願 vs 互動日誌 -->
+      <div class="px-4 mt-2">
+        <div class="flex gap-2 mb-4">
+          <button id="subTabPrefBtn" onclick="switchDetailSubTab('pref')" class="flex-1 sketch-btn bg-[#A8D5E5]/70 py-2 text-sm font-bold">情報與送禮心願</button>
+          <button id="subTabLogBtn" onclick="switchDetailSubTab('log')" class="flex-1 sketch-btn bg-[#FAF8F3] py-2 text-sm">互動日誌</button>
+        </div>
+
+        <!-- 子分頁 A：情報與送禮心願 -->
+        <div id="detailPrefSection" class="space-y-3">
+          <div id="addPrefBox" class="sketch-box p-3 space-y-2 bg-[#FAF8F3]">
+            <div class="flex gap-2">
+              <select id="newPrefCategory" class="sketch-pill bg-[#F3EFE6] px-2.5 py-1.5 text-xs font-bold focus:outline-none">
+                <option value="wishlist">送禮心願</option>
+                <option value="diet">飲食偏好/禁忌</option>
+                <option value="topic">興趣話題</option>
+                <option value="taboo">注意事項</option>
+              </select>
+              <input id="newPrefContent" type="text" placeholder="記下一筆細節（如：不吃香菜、想換手沖壺）" class="flex-1 sketch-pill bg-[#F3EFE6] px-3 py-1.5 text-xs focus:outline-none" />
+            </div>
+            <button onclick="addPreference()" class="w-full sketch-btn bg-[#A3CE8B]/60 py-1.5 text-xs font-bold">+ 收入情報庫</button>
+          </div>
+          <div id="detailPrefList" class="space-y-2"></div>
+        </div>
+
+        <!-- 子分頁 B：互動日誌（新增拍照與附圖功能） -->
+        <div id="detailLogSection" class="hidden space-y-3">
+          <div id="addLogBox" class="sketch-box p-3 space-y-2.5 bg-[#FAF8F3]">
+            <div class="flex gap-2">
+              <input id="newLogDate" type="date" class="sketch-pill bg-[#F3EFE6] px-2.5 py-1.5 text-xs focus:outline-none" />
+              <input id="newLogLocation" type="text" placeholder="見面地點（如：大安森林公園）" class="flex-1 sketch-pill bg-[#F3EFE6] px-3 py-1.5 text-xs focus:outline-none" />
+            </div>
+            <textarea id="newLogNotes" rows="2" placeholder="記錄今天聊了什麼、對方的近況..." class="w-full rounded-xl border border-[#383633] bg-[#F3EFE6] px-3 py-2 text-xs focus:outline-none"></textarea>
+
+            <!-- 拍照 / 選擇相簿圖片區 -->
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <label class="sketch-btn bg-[#F3EFE6] px-3 py-1.5 text-xs font-bold cursor-pointer inline-flex items-center gap-1.5">
+                  <svg class="w-4 h-4 text-[#383633]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                  </svg>
+                  <span>拍照 / 附上照片</span>
+                  <input type="file" accept="image/*" multiple class="hidden" onchange="handleNewLogPhotos(event)" />
+                </label>
+                <span class="text-[11px] text-[#8C857B]">支援多張（自動壓縮留存）</span>
+              </div>
+
+              <!-- 待上傳照片縮圖預覽列 -->
+              <div id="newLogPhotosPreview" class="hidden flex gap-2 overflow-x-auto no-scrollbar py-1"></div>
+            </div>
+
+            <button onclick="addInteractionLog()" class="w-full sketch-btn bg-[#A8D5E5]/60 py-1.5 text-xs font-bold">+ 寫入互動日誌</button>
+          </div>
+
+          <div id="detailLogList" class="space-y-2.5"></div>
+        </div>
+
+        <!-- 徹底刪除按鈕（僅在編輯模式下顯示） -->
+        <div id="detailDeleteSection" class="hidden mt-8 pt-4 border-t border-dashed border-[#383633]/20 text-center">
+          <button id="detailDeleteBtn" class="text-xs text-[#B83A2D] underline">徹底銷毀此份契約（永久刪除）</button>
+        </div>
+      </div>
+
+      <!-- 底部固定操作列（類 iPhone 圖片編輯器：左下取消、右下完成） -->
+      <div id="detailEditBottomBar" class="hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FAF8F3]/95 backdrop-blur-sm border-t-[1.5px] border-[#383633] nav-safe">
+        <div class="max-w-md mx-auto px-5 pt-3 pb-2 flex items-center justify-between gap-4">
+          <button type="button" onclick="cancelDetailEditMode()" class="sketch-btn bg-[#FAF8F3] px-6 py-2.5 text-sm text-[#5A554C]">
+            取消
+          </button>
+          <span class="font-brush text-base text-[#787268]">修訂契約</span>
+          <button type="button" onclick="commitDetailEditMode()" class="sketch-btn bg-[#7DB865]/80 px-6 py-2.5 text-sm font-bold text-[#383633]">
+            完成
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 彈窗 4：日誌照片全螢幕燈箱檢視 ==================== -->
+  <div id="photoLightbox" onclick="closePhotoLightbox()" class="hidden fixed inset-0 z-50 bg-[#23211F]/90 backdrop-blur-xs flex flex-col items-center justify-center p-4">
+    <div class="w-full max-w-md flex justify-end mb-3">
+      <button type="button" onclick="closePhotoLightbox()" class="sketch-btn bg-[#FAF8F3] px-3.5 py-1.5 text-xs font-bold">✕ 關閉</button>
+    </div>
+    <img id="lightboxImg" src="" alt="日誌照片放大" onclick="event.stopPropagation()" class="max-w-full max-h-[75vh] object-contain rounded-xl border-2 border-[#FAF8F3] shadow-2xl" />
+    <p id="lightboxCaption" class="text-xs text-[#FAF8F3]/85 mt-3 text-center px-4"></p>
+  </div>
+
+  <!-- 自訂輕量提示訊息框 -->
+  <div id="toastBox" class="hidden fixed top-12 left-1/2 -translate-x-1/2 z-50 sketch-box bg-[#FAF8F3] px-4 py-2 text-xs font-bold shadow-lg"></div>
+
+  <!-- 自訂確認對話框 -->
+  <div id="confirmDialog" class="hidden fixed inset-0 z-50 bg-[#383633]/50 flex items-center justify-center p-5">
+    <div class="w-full max-w-xs sketch-box bg-[#F3EFE6] p-5 space-y-4">
+      <h4 id="confirmTitle" class="font-brush text-xl">確認操作</h4>
+      <p id="confirmMessage" class="text-xs text-[#5A554C] leading-relaxed"></p>
+      <div class="flex gap-2.5">
+        <button onclick="closeConfirmDialog()" class="flex-1 sketch-btn bg-[#FAF8F3] py-2 text-xs">取消</button>
+        <button id="confirmOkBtn" class="flex-1 sketch-btn bg-[#D9B3B0] py-2 text-xs font-bold">確定</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== 1. 資料狀態與預設範例 ====================
+    const STORAGE_KEY = 'yuujinchou_watercolor_v1';
+
+    function getDefaultAvatar(seed = 1) {
+      const colors = ['#A8D5E5', '#A3CE8B', '#E5C6A8', '#D9B3B0'];
+      const bg = colors[seed % colors.length];
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <rect width="100" height="100" fill="${bg}" fill-opacity="0.45"/>
+        <path d="M22 65 C14 65, 14 52, 24 50 C26 40, 42 38, 48 46 C58 40, 74 44, 76 54 C86 54, 86 65, 76 65 Z" fill="#FAF8F3" stroke="#383633" stroke-width="2" stroke-linecap="round"/>
+        <path d="M15 88 Q22 72 28 88 M45 88 Q50 68 56 88 M72 88 Q78 74 84 88" fill="none" stroke="#4B7A38" stroke-width="2" stroke-linecap="round"/>
+      </svg>`;
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    }
+
+    function getUpcomingDemoBirthday(daysOffset) {
+      const d = new Date();
+      d.setDate(d.getDate() + daysOffset);
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `1998-${mm}-${dd}`;
+    }
+
+    const INITIAL_DATA = [
+      {
+        id: 'f_demo_1',
+        name: '林知夏',
+        nickname: '夏夏',
+        birthday: getUpcomingDemoBirthday(5),
+        tag: '大學同學',
+        context: '大二水彩寫生社認識，一起去過九份寫生',
+        bondLevel: 5,
+        status: 'active',
+        avatar: getDefaultAvatar(0),
+        signature: '',
+        preferences: [
+          { id: 'p1', category: 'wishlist', content: '想要日本製的細字鋼筆或塊狀水彩盒', fulfilled: false },
+          { id: 'p2', category: 'diet', content: '喜歡焙茶拿鐵（微糖去冰），不吃香菜', fulfilled: false }
+        ],
+        logs: [
+          {
+            id: 'l1',
+            date: '2026-10-18',
+            location: '華山文創園區',
+            notes: '一起看了插畫展，聊到她年底打算規劃京都獨旅。',
+            photos: []
+          }
+        ]
+      },
+      {
+        id: 'f_demo_2',
+        name: '陳牧野',
+        nickname: '阿牧',
+        birthday: '1997-08-14',
+        tag: '職場夥伴',
+        context: '上一份專案的設計指導，很照顧新人',
+        bondLevel: 4,
+        status: 'active',
+        avatar: getDefaultAvatar(1),
+        signature: '',
+        preferences: [
+          { id: 'p3', category: 'topic', content: '週末喜歡露營與手沖單品咖啡', fulfilled: false },
+          { id: 'p4', category: 'wishlist', content: '鈦金屬露營杯', fulfilled: true }
+        ],
+        logs: [
+          {
+            id: 'l2',
+            date: '2026-09-02',
+            location: '中山站咖啡廳',
+            notes: '請教轉職作品集方向，收穫很多建議。',
+            photos: []
+          }
+        ]
+      }
+    ];
+
+    let friends = [];
+    let selectedTag = '全部';
+
+    // 新增（立契）彈窗暫存狀態
+    let createAvatarDataUrl = '';
+    let createSignatureDataUrl = '';
+    let createBondLevel = 3;
+
+    // 詳情頁與原地編輯狀態
+    let currentDetailId = null;
+    let isDetailEditing = false;
+    let detailDraft = null;
+
+    // 待新增日誌的暫存照片陣列
+    let pendingNewLogPhotos = [];
+
+    // 簽名畫布來源模式：'create' | 'detail'
+    let signatureTargetMode = 'create';
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          friends = JSON.parse(raw);
+        } else {
+          friends = JSON.parse(JSON.stringify(INITIAL_DATA));
+          saveData();
+        }
+      } catch (e) {
+        friends = JSON.parse(JSON.stringify(INITIAL_DATA));
+      }
+    }
+
+    function saveData() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(friends));
+      } catch (e) {
+        showToast('儲存空間已滿，建議先匯出備份或減少照片數量');
+      }
+    }
+
+    // ==================== 2. 生日倒數計算邏輯 ====================
+    function getDaysUntilBirthday(birthdayStr) {
+      if (!birthdayStr) return null;
+      const parts = birthdayStr.split('-');
+      if (parts.length < 3) return null;
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      let nextBday = new Date(today.getFullYear(), month, day);
+      if (nextBday < today) {
+        nextBday.setFullYear(today.getFullYear() + 1);
+      }
+      const diffTime = nextBday - today;
+      return Math.round(diffTime / (1000 * 60 * 60 * 24));
+    }
+
+    function formatBirthdayDisplay(birthdayStr) {
+      if (!birthdayStr) return '未設定生辰';
+      const parts = birthdayStr.split('-');
+      const days = getDaysUntilBirthday(birthdayStr);
+      const dateText = `${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日`;
+      if (days === 0) return `${dateText}（就是今天！）`;
+      return `${dateText}（還有 ${days} 天）`;
+    }
+
+    // ==================== 3. 主畫面渲染邏輯 ====================
+    function renderAll() {
+      renderBannerAndBadge();
+      renderTagFilters();
+      renderDirectory();
+      renderBirthdaysAndWishlist();
+      renderArchive();
+    }
+
+    function renderBannerAndBadge() {
+      const activeFriends = friends.filter(f => f.status === 'active');
+      document.getElementById('activeCountBadge').textContent = `契約 ${activeFriends.length} 份`;
+
+      const upcoming = activeFriends
+        .map(f => ({ ...f, daysLeft: getDaysUntilBirthday(f.birthday) }))
+        .filter(f => f.daysLeft !== null && f.daysLeft <= 14)
+        .sort((a, b) => a.daysLeft - b.daysLeft);
+
+      const banner = document.getElementById('birthdayBanner');
+      if (upcoming.length > 0) {
+        banner.classList.remove('hidden');
+        const first = upcoming[0];
+        const dayLabel = first.daysLeft === 0 ? '今天生日！' : `${first.daysLeft} 天後生辰`;
+        const extra = upcoming.length > 1 ? ` 等 ${upcoming.length} 位友人` : '';
+        document.getElementById('birthdayBannerText').textContent = `「${first.name}」${dayLabel}${extra}`;
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    function renderTagFilters() {
+      const activeFriends = friends.filter(f => f.status === 'active');
+      const tags = ['全部', ...new Set(activeFriends.map(f => f.tag).filter(Boolean))];
+      if (!tags.includes(selectedTag)) selectedTag = '全部';
+
+      const container = document.getElementById('tagFilterBar');
+      container.innerHTML = tags.map(tag => {
+        const isSelected = tag === selectedTag;
+        const bgClass = isSelected ? 'bg-[#A8D5E5]/80 font-bold' : 'bg-[#FAF8F3] text-[#655F56]';
+        return `<button onclick="selectTag('${tag}')" class="sketch-pill ${bgClass} px-3.5 py-1 text-xs shrink-0 transition">${tag}</button>`;
+      }).join('');
+    }
+
+    function selectTag(tag) {
+      selectedTag = tag;
+      renderTagFilters();
+      renderDirectory();
+    }
+
+    function renderDirectory() {
+      const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+      let list = friends.filter(f => f.status === 'active');
+
+      if (selectedTag !== '全部') {
+        list = list.filter(f => f.tag === selectedTag);
+      }
+
+      if (keyword) {
+        list = list.filter(f => {
+          const inBasic = (f.name + (f.nickname || '') + (f.context || '') + (f.tag || '')).toLowerCase().includes(keyword);
+          const inPref = (f.preferences || []).some(p => p.content.toLowerCase().includes(keyword));
+          const inLogs = (f.logs || []).some(l => ((l.notes || '') + (l.location || '')).toLowerCase().includes(keyword));
+          return inBasic || inPref || inLogs;
+        });
+      }
+
+      const container = document.getElementById('friendsList');
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="sketch-box p-8 text-center space-y-2 mt-4">
+            <p class="font-brush text-xl text-[#655F56]">尚無符合的契約紀錄</p>
+            <p class="text-xs text-[#8C857B]">點擊右下角「+ 立契」寫下第一位友人的故事</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(f => {
+        const daysLeft = getDaysUntilBirthday(f.birthday);
+        const bdayBadge = daysLeft !== null
+          ? `<span class="text-[11px] px-2 py-0.5 rounded-full ${daysLeft <= 14 ? 'bg-[#A3CE8B]/55 font-bold text-[#2F5222]' : 'bg-[#F3EFE6] text-[#787268]'}">
+               ${daysLeft === 0 ? '今日生辰' : `生辰 ${daysLeft}天`}
+             </span>`
+          : '';
+
+        const sigThumb = f.signature
+          ? `<img src="${f.signature}" alt="簽名" class="h-9 max-w-[76px] object-contain opacity-85" />`
+          : `<span class="text-[11px] text-[#A59E93] italic">未簽署</span>`;
+
+        return `
+          <div onclick="openDetailModal('${f.id}')" class="sketch-box p-3.5 flex items-center gap-3.5 cursor-pointer">
+            <img src="${f.avatar || getDefaultAvatar(1)}" alt="${f.name}" class="w-14 h-14 object-cover sketch-avatar shrink-0 bg-[#F3EFE6]" />
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-1.5">
+                <h3 class="font-brush text-2xl truncate">${escapeHtml(f.name)}</h3>
+                ${f.nickname ? `<span class="text-xs text-[#787268] truncate">(${escapeHtml(f.nickname)})</span>` : ''}
+              </div>
+              <div class="flex items-center gap-1.5 mt-1 flex-wrap">
+                ${f.tag ? `<span class="sketch-pill bg-[#A8D5E5]/35 px-2 py-0.5 text-[11px]">${escapeHtml(f.tag)}</span>` : ''}
+                ${bdayBadge}
+              </div>
+            </div>
+            <div class="shrink-0 flex flex-col items-end justify-between self-stretch">
+              ${sigThumb}
+              <span class="text-[10px] text-[#8C857B] tracking-widest">${'✦'.repeat(f.bondLevel || 3)}</span>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function renderBirthdaysAndWishlist() {
+      const activeFriends = friends.filter(f => f.status === 'active');
+
+      const upcoming = activeFriends
+        .map(f => ({ ...f, daysLeft: getDaysUntilBirthday(f.birthday) }))
+        .filter(f => f.daysLeft !== null && f.daysLeft <= 60)
+        .sort((a, b) => a.daysLeft - b.daysLeft);
+
+      const bdayContainer = document.getElementById('upcomingBirthdaysList');
+      if (upcoming.length === 0) {
+        bdayContainer.innerHTML = `<div class="sketch-box p-4 text-xs text-[#787268] text-center">未來 60 天內暫無友人過生辰</div>`;
+      } else {
+        bdayContainer.innerHTML = upcoming.map(f => `
+          <div onclick="openDetailModal('${f.id}')" class="sketch-box p-3 flex items-center justify-between cursor-pointer">
+            <div class="flex items-center gap-3">
+              <img src="${f.avatar || getDefaultAvatar(2)}" class="w-11 h-11 object-cover sketch-avatar" />
+              <div>
+                <p class="font-brush text-xl">${escapeHtml(f.name)}</p>
+                <p class="text-xs text-[#655F56]">${formatBirthdayDisplay(f.birthday)}</p>
+              </div>
+            </div>
+            <span class="sketch-pill bg-[#A3CE8B]/50 px-2.5 py-1 text-xs font-bold">查看詳情</span>
+          </div>
+        `).join('');
+      }
+
+      const wishes = [];
+      activeFriends.forEach(f => {
+        (f.preferences || []).forEach(p => {
+          if (p.category === 'wishlist' && !p.fulfilled) {
+            wishes.push({ friendId: f.id, friendName: f.name, pref: p });
+          }
+        });
+      });
+
+      const wishContainer = document.getElementById('wishlistSummaryList');
+      if (wishes.length === 0) {
+        wishContainer.innerHTML = `<div class="sketch-box p-4 text-xs text-[#787268] text-center">目前沒有待實現的送禮心願</div>`;
+      } else {
+        wishContainer.innerHTML = wishes.map(item => `
+          <div class="sketch-box p-3 flex items-center justify-between gap-2">
+            <div onclick="openDetailModal('${item.friendId}')" class="flex-1 cursor-pointer">
+              <span class="text-xs font-bold text-[#4B7A38]">給「${escapeHtml(item.friendName)}」</span>
+              <p class="text-sm mt-0.5">${escapeHtml(item.pref.content)}</p>
+            </div>
+            <button onclick="toggleWishFulfilled('${item.friendId}', '${item.pref.id}')" class="sketch-btn bg-[#FAF8F3] px-2.5 py-1 text-xs shrink-0">
+              標記已送
+            </button>
+          </div>
+        `).join('');
+      }
+    }
+
+    function renderArchive() {
+      const archived = friends.filter(f => f.status === 'returned');
+      const container = document.getElementById('archivedList');
+      if (archived.length === 0) {
+        container.innerHTML = `<div class="sketch-box p-5 text-center text-xs text-[#787268]">目前沒有已歸還的契約</div>`;
+        return;
+      }
+
+      container.innerHTML = archived.map(f => `
+        <div class="sketch-box p-3.5 flex items-center justify-between opacity-85">
+          <div class="flex items-center gap-3">
+            <img src="${f.avatar || getDefaultAvatar(3)}" class="w-12 h-12 object-cover sketch-avatar grayscale" />
+            <div>
+              <h4 class="font-brush text-xl">${escapeHtml(f.name)}</h4>
+              <p class="text-[11px] text-[#787268]">已歸還封存</p>
+            </div>
+          </div>
+          <button onclick="restoreFriend('${f.id}')" class="sketch-btn bg-[#A8D5E5]/60 px-3 py-1.5 text-xs font-bold">重新簽訂</button>
+        </div>
+      `).join('');
+    }
+
+    function switchTab(tabName) {
+      ['directory', 'birthdays', 'archive'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tabName);
+        const navBtn = document.getElementById(`nav-${t}`);
+        if (t === tabName) {
+          navBtn.classList.remove('text-[#787268]');
+          navBtn.classList.add('text-[#383633]', 'font-bold');
+        } else {
+          navBtn.classList.add('text-[#787268]');
+          navBtn.classList.remove('text-[#383633]', 'font-bold');
+        }
+      });
+      renderAll();
+    }
+
+    // ==================== 4. 圖片壓縮通用函式 ====================
+    // 頭像專用：居中裁切正方形
+    function compressSquareImage(file, callback) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const targetSize = 320;
+          const canvas = document.createElement('canvas');
+          canvas.width = targetSize;
+          canvas.height = targetSize;
+          const ctx = canvas.getContext('2d');
+
+          const minSide = Math.min(img.width, img.height);
+          const sx = (img.width - minSide) / 2;
+          const sy = (img.height - minSide) / 2;
+
+          ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, targetSize, targetSize);
+          callback(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // 日誌照片專用：保留完整原始比例，長邊縮放至 800px，兼顧清晰度與容量
+    function compressLogPhoto(file, callback) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const maxSide = 800;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxSide || height > maxSide) {
+            if (width > height) {
+              height = Math.round((height * maxSide) / width);
+              width = maxSide;
+            } else {
+              width = Math.round((width * maxSide) / height);
+              height = maxSide;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          callback(canvas.toDataURL('image/jpeg', 0.78));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ==================== 5. 新增契約（立契）彈窗 ====================
+    function openCreateModal() {
+      document.getElementById('createFriendModal').classList.remove('hidden');
+      document.getElementById('createName').value = '';
+      document.getElementById('createNickname').value = '';
+      document.getElementById('createBirthday').value = '';
+      document.getElementById('createTag').value = '';
+      document.getElementById('createContext').value = '';
+      createBondLevel = 3;
+      createAvatarDataUrl = '';
+      createSignatureDataUrl = '';
+
+      updateCreateAvatarUI();
+      updateCreateSigUI();
+      renderCreateBondButtons();
+    }
+
+    function closeCreateModal() {
+      document.getElementById('createFriendModal').classList.add('hidden');
+    }
+
+    function renderCreateBondButtons() {
+      const container = document.getElementById('createBondGroup');
+      container.innerHTML = [1, 2, 3, 4, 5].map(level => {
+        const active = level <= createBondLevel;
+        return `<button type="button" onclick="setCreateBond(${level})" class="sketch-btn px-3 py-1 text-xs ${active ? 'bg-[#A3CE8B]/70 font-bold' : 'bg-[#FAF8F3] text-[#8C857B]'}">✦ ${level}</button>`;
+      }).join('');
+    }
+
+    function setCreateBond(lvl) {
+      createBondLevel = lvl;
+      renderCreateBondButtons();
+    }
+
+    function handleCreateAvatarUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      compressSquareImage(file, (dataUrl) => {
+        createAvatarDataUrl = dataUrl;
+        updateCreateAvatarUI();
+        showToast('影像已自動裁切並壓縮');
+      });
+    }
+
+    function clearCreateAvatar() {
+      createAvatarDataUrl = '';
+      updateCreateAvatarUI();
+    }
+
+    function updateCreateAvatarUI() {
+      const preview = document.getElementById('createAvatarPreview');
+      const removeBtn = document.getElementById('createRemoveAvatarBtn');
+      if (createAvatarDataUrl) {
+        preview.src = createAvatarDataUrl;
+        removeBtn.classList.remove('hidden');
+      } else {
+        preview.src = getDefaultAvatar(friends.length + 1);
+        removeBtn.classList.add('hidden');
+      }
+    }
+
+    function updateCreateSigUI() {
+      const img = document.getElementById('createSigImg');
+      const placeholder = document.getElementById('createSigPlaceholder');
+      const seal = document.getElementById('createSigSeal');
+      if (createSignatureDataUrl) {
+        img.src = createSignatureDataUrl;
+        img.classList.remove('hidden');
+        seal.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+      } else {
+        img.classList.add('hidden');
+        seal.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+      }
+    }
+
+    function saveNewFriend() {
+      const name = document.getElementById('createName').value.trim();
+      if (!name) {
+        showToast('請填寫友人姓名');
+        return;
+      }
+
+      friends.unshift({
+        id: 'f_' + Date.now(),
+        status: 'active',
+        name,
+        nickname: document.getElementById('createNickname').value.trim(),
+        birthday: document.getElementById('createBirthday').value,
+        tag: document.getElementById('createTag').value.trim() || '友人',
+        context: document.getElementById('createContext').value.trim(),
+        bondLevel: createBondLevel,
+        avatar: createAvatarDataUrl || getDefaultAvatar(friends.length + 1),
+        signature: createSignatureDataUrl,
+        preferences: [],
+        logs: []
+      });
+
+      saveData();
+      closeCreateModal();
+      renderAll();
+      showToast('新契約已收入友人帳');
+    }
+
+    // ==================== 6. 毛筆感手寫簽名畫布 ====================
+    let sigCanvas, sigCtx;
+    let isDrawing = false;
+    let lastPoint = null;
+    let lastWidth = 3.5;
+
+    function openSignatureModal(mode = 'create') {
+      signatureTargetMode = mode;
+      document.getElementById('signatureModal').classList.remove('hidden');
+      sigCanvas = document.getElementById('signatureCanvas');
+      const rect = sigCanvas.parentElement.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      sigCanvas.width = rect.width * dpr;
+      sigCanvas.height = rect.height * dpr;
+
+      sigCtx = sigCanvas.getContext('2d');
+      sigCtx.scale(dpr, dpr);
+      sigCtx.lineCap = 'round';
+      sigCtx.lineJoin = 'round';
+      sigCtx.strokeStyle = '#2B2927';
+
+      bindCanvasEvents();
+    }
+
+    function bindCanvasEvents() {
+      sigCanvas.onpointerdown = (e) => {
+        isDrawing = true;
+        const pos = getCanvasPos(e);
+        lastPoint = { ...pos, time: Date.now() };
+        lastWidth = 4.2;
+      };
+
+      sigCanvas.onpointermove = (e) => {
+        if (!isDrawing || !lastPoint) return;
+        const pos = getCanvasPos(e);
+        const now = Date.now();
+        const dt = Math.max(now - lastPoint.time, 1);
+        const dist = Math.hypot(pos.x - lastPoint.x, pos.y - lastPoint.y);
+        const velocity = dist / dt;
+
+        const targetWidth = Math.max(1.6, Math.min(6.0, 5.5 - velocity * 2.2));
+        const currentWidth = lastWidth * 0.7 + targetWidth * 0.3;
+
+        sigCtx.beginPath();
+        sigCtx.lineWidth = currentWidth;
+        sigCtx.moveTo(lastPoint.x, lastPoint.y);
+        sigCtx.lineTo(pos.x, pos.y);
+        sigCtx.stroke();
+
+        lastPoint = { ...pos, time: now };
+        lastWidth = currentWidth;
+      };
+
+      sigCanvas.onpointerup = () => {
+        isDrawing = false;
+        lastPoint = null;
+      };
+    }
+
+    function getCanvasPos(e) {
+      const rect = sigCanvas.getBoundingClientRect();
+      return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+    }
+
+    function clearSignatureCanvas() {
+      if (!sigCtx || !sigCanvas) return;
+      sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+    }
+
+    function closeSignatureModal() {
+      document.getElementById('signatureModal').classList.add('hidden');
+    }
+
+    function confirmSignature() {
+      const dataUrl = sigCanvas.toDataURL('image/png');
+      if (signatureTargetMode === 'create') {
+        createSignatureDataUrl = dataUrl;
+        updateCreateSigUI();
+      } else if (signatureTargetMode === 'detail' && detailDraft) {
+        detailDraft.signature = dataUrl;
+        renderDetailScreen();
+      }
+      closeSignatureModal();
+      showToast('契約簽署完成');
+    }
+
+    // ==================== 7. 好友契約詳情頁 & 原地編輯模式 ====================
+    function openDetailModal(id) {
+      const f = friends.find(item => item.id === id);
+      if (!f) return;
+      currentDetailId = id;
+      isDetailEditing = false;
+      detailDraft = null;
+      pendingNewLogPhotos = [];
+      renderNewLogPhotosPreview();
+
+      document.getElementById('detailArchiveBtn').onclick = () => confirmArchiveFriend(f.id);
+      document.getElementById('detailDeleteBtn').onclick = () => confirmDeleteFriend(f.id);
+      document.getElementById('newLogDate').value = new Date().toISOString().split('T')[0];
+
+      renderDetailScreen();
+      switchDetailSubTab('pref');
+      document.getElementById('detailModal').classList.remove('hidden');
+    }
+
+    function closeDetailModal() {
+      isDetailEditing = false;
+      detailDraft = null;
+      pendingNewLogPhotos = [];
+      document.getElementById('detailModal').classList.add('hidden');
+      currentDetailId = null;
+      renderAll();
+    }
+
+    function enterDetailEditMode() {
+      const f = friends.find(item => item.id === currentDetailId);
+      if (!f) return;
+
+      detailDraft = JSON.parse(JSON.stringify(f));
+      isDetailEditing = true;
+
+      document.getElementById('editDetailName').value = detailDraft.name || '';
+      document.getElementById('editDetailNickname').value = detailDraft.nickname || '';
+      document.getElementById('editDetailTag').value = detailDraft.tag || '';
+      document.getElementById('editDetailBirthday').value = detailDraft.birthday || '';
+      document.getElementById('editDetailContext').value = detailDraft.context || '';
+
+      renderDetailScreen();
+    }
+
+    function cancelDetailEditMode() {
+      isDetailEditing = false;
+      detailDraft = null;
+      renderDetailScreen();
+      showToast('已取消修訂');
+    }
+
+    function commitDetailEditMode() {
+      if (!detailDraft) return;
+      const updatedName = document.getElementById('editDetailName').value.trim();
+      if (!updatedName) {
+        showToast('姓名不可為空');
+        return;
+      }
+
+      detailDraft.name = updatedName;
+      detailDraft.nickname = document.getElementById('editDetailNickname').value.trim();
+      detailDraft.tag = document.getElementById('editDetailTag').value.trim() || '友人';
+      detailDraft.birthday = document.getElementById('editDetailBirthday').value;
+      detailDraft.context = document.getElementById('editDetailContext').value.trim();
+
+      const idx = friends.findIndex(item => item.id === currentDetailId);
+      if (idx !== -1) {
+        friends[idx] = detailDraft;
+      }
+
+      saveData();
+      isDetailEditing = false;
+      detailDraft = null;
+      renderDetailScreen();
+      renderAll();
+      showToast('契約修訂已完成');
+    }
+
+    function renderDetailScreen() {
+      const source = isDetailEditing ? detailDraft : friends.find(item => item.id === currentDetailId);
+      if (!source) return;
+
+      document.getElementById('detailViewHeader').classList.toggle('hidden', isDetailEditing);
+      document.getElementById('detailEditHeader').classList.toggle('hidden', !isDetailEditing);
+      document.getElementById('detailEditBottomBar').classList.toggle('hidden', !isDetailEditing);
+      document.getElementById('detailDeleteSection').classList.toggle('hidden', !isDetailEditing);
+
+      document.getElementById('detailAvatar').src = source.avatar || getDefaultAvatar(1);
+      document.getElementById('detailAvatarEditOverlay').classList.toggle('hidden', !isDetailEditing);
+      const isCustomAvatar = source.avatar && !source.avatar.startsWith('data:image/svg+xml');
+      document.getElementById('detailAvatarRemoveBtn').classList.toggle('hidden', !(isDetailEditing && isCustomAvatar));
+
+      document.getElementById('detailIdentityView').classList.toggle('hidden', isDetailEditing);
+      document.getElementById('detailIdentityEdit').classList.toggle('hidden', !isDetailEditing);
+
+      if (!isDetailEditing) {
+        document.getElementById('detailName').textContent = source.name;
+        document.getElementById('detailNickname').textContent = source.nickname ? `(${source.nickname})` : '';
+        document.getElementById('detailTag').textContent = source.tag || '友人';
+        document.getElementById('detailBirthdayText').textContent = formatBirthdayDisplay(source.birthday);
+        document.getElementById('detailBondView').textContent = `羈絆深淺：${'✦'.repeat(source.bondLevel || 3)}`;
+      } else {
+        renderDetailBondButtons();
+      }
+
+      document.getElementById('detailContext').classList.toggle('hidden', isDetailEditing);
+      document.getElementById('detailContextEditWrap').classList.toggle('hidden', !isDetailEditing);
+      if (!isDetailEditing) {
+        document.getElementById('detailContext').textContent = source.context ? `相遇契機：${source.context}` : '尚未記錄相遇契機';
+      }
+
+      const sigWrap = document.getElementById('detailSignatureWrap');
+      const sigImg = document.getElementById('detailSignatureImg');
+      const sigEmptyHint = document.getElementById('detailSignatureEmptyHint');
+      const resignBtn = document.getElementById('detailResignBtn');
+      const sealStamp = document.getElementById('detailSealStamp');
+
+      if (isDetailEditing) {
+        sigWrap.classList.remove('hidden');
+        resignBtn.classList.remove('hidden');
+        if (source.signature) {
+          sigImg.src = source.signature;
+          sigImg.classList.remove('hidden');
+          sigEmptyHint.classList.add('hidden');
+          sealStamp.classList.remove('hidden');
+        } else {
+          sigImg.classList.add('hidden');
+          sigEmptyHint.classList.remove('hidden');
+          sealStamp.classList.add('hidden');
+        }
+      } else {
+        resignBtn.classList.add('hidden');
+        sigEmptyHint.classList.add('hidden');
+        if (source.signature) {
+          sigWrap.classList.remove('hidden');
+          sigImg.src = source.signature;
+          sigImg.classList.remove('hidden');
+          sealStamp.classList.remove('hidden');
+        } else {
+          sigWrap.classList.add('hidden');
+        }
+      }
+
+      renderDetailPreferences(source);
+      renderDetailLogs(source);
+    }
+
+    function renderDetailBondButtons() {
+      if (!detailDraft) return;
+      const container = document.getElementById('editDetailBondGroup');
+      container.innerHTML = [1, 2, 3, 4, 5].map(level => {
+        const active = level <= (detailDraft.bondLevel || 3);
+        return `<button type="button" onclick="setDetailDraftBond(${level})" class="sketch-btn px-2 py-0.5 text-[11px] ${active ? 'bg-[#A3CE8B]/75 font-bold' : 'bg-[#FAF8F3] text-[#8C857B]'}">✦${level}</button>`;
+      }).join('');
+    }
+
+    function setDetailDraftBond(lvl) {
+      if (!detailDraft) return;
+      detailDraft.bondLevel = lvl;
+      renderDetailBondButtons();
+    }
+
+    function handleDetailAvatarUpload(event) {
+      const file = event.target.files[0];
+      if (!file || !detailDraft) return;
+      compressSquareImage(file, (dataUrl) => {
+        detailDraft.avatar = dataUrl;
+        renderDetailScreen();
+        showToast('已更新代表影像');
+      });
+    }
+
+    function clearDetailAvatar() {
+      if (!detailDraft) return;
+      detailDraft.avatar = getDefaultAvatar(1);
+      renderDetailScreen();
+    }
+
+    function switchDetailSubTab(tab) {
+      const isPref = tab === 'pref';
+      document.getElementById('detailPrefSection').classList.toggle('hidden', !isPref);
+      document.getElementById('detailLogSection').classList.toggle('hidden', isPref);
+
+      document.getElementById('subTabPrefBtn').className = `flex-1 sketch-btn py-2 text-sm ${isPref ? 'bg-[#A8D5E5]/70 font-bold' : 'bg-[#FAF8F3]'}`;
+      document.getElementById('subTabLogBtn').className = `flex-1 sketch-btn py-2 text-sm ${!isPref ? 'bg-[#A8D5E5]/70 font-bold' : 'bg-[#FAF8F3]'}`;
+    }
+
+    const CATEGORY_LABELS = {
+      wishlist: { label: '送禮心願', color: 'bg-[#A3CE8B]/50' },
+      diet: { label: '飲食偏好', color: 'bg-[#A8D5E5]/50' },
+      topic: { label: '興趣話題', color: 'bg-[#E5D5A8]/60' },
+      taboo: { label: '注意事項', color: 'bg-[#D9B3B0]/60' }
+    };
+
+    function getActiveDetailTarget() {
+      return isDetailEditing ? detailDraft : friends.find(item => item.id === currentDetailId);
+    }
+
+    function renderDetailPreferences(friend) {
+      const container = document.getElementById('detailPrefList');
+      const prefs = friend.preferences || [];
+      if (prefs.length === 0) {
+        container.innerHTML = `<p class="text-center text-xs text-[#8C857B] py-4">尚未記錄任何情報或心願</p>`;
+        return;
+      }
+
+      container.innerHTML = prefs.map(p => {
+        const meta = CATEGORY_LABELS[p.category] || CATEGORY_LABELS.topic;
+        if (isDetailEditing) {
+          return `
+            <div class="sketch-box p-2.5 flex items-center gap-2">
+              <span class="sketch-pill ${meta.color} px-2 py-0.5 text-[10px] shrink-0">${meta.label}</span>
+              <input
+                type="text"
+                value="${escapeAttr(p.content)}"
+                oninput="updateDraftPreference('${p.id}', this.value)"
+                class="flex-1 text-xs inline-edit-input"
+              />
+              <button onclick="deletePreference('${friend.id}', '${p.id}')" class="text-xs text-[#B83A2D] px-1.5 font-bold">✕</button>
+            </div>`;
+        }
+        return `
+          <div class="sketch-box p-3 flex items-center justify-between gap-2">
+            <div class="flex items-start gap-2 flex-1">
+              <span class="sketch-pill ${meta.color} px-2 py-0.5 text-[10px] shrink-0 mt-0.5">${meta.label}</span>
+              <p class="text-xs leading-relaxed ${p.fulfilled ? 'line-through text-[#8C857B]' : ''}">${escapeHtml(p.content)}</p>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              ${p.category === 'wishlist' ? `
+                <button onclick="toggleWishFulfilled('${friend.id}', '${p.id}')" class="text-[11px] px-2 py-0.5 border border-[#383633] rounded ${p.fulfilled ? 'bg-[#A3CE8B]/60' : 'bg-[#FAF8F3]'}">
+                  ${p.fulfilled ? '已送出' : '實現'}
+                </button>` : ''}
+              <button onclick="deletePreference('${friend.id}', '${p.id}')" class="text-xs text-[#8C857B] px-1">✕</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function updateDraftPreference(prefId, newContent) {
+      if (!detailDraft) return;
+      const p = (detailDraft.preferences || []).find(item => item.id === prefId);
+      if (p) p.content = newContent;
+    }
+
+    function addPreference() {
+      const target = getActiveDetailTarget();
+      if (!target) return;
+      const category = document.getElementById('newPrefCategory').value;
+      const content = document.getElementById('newPrefContent').value.trim();
+      if (!content) {
+        showToast('請輸入情報內容');
+        return;
+      }
+
+      target.preferences = target.preferences || [];
+      target.preferences.unshift({
+        id: 'p_' + Date.now(),
+        category,
+        content,
+        fulfilled: false
+      });
+
+      document.getElementById('newPrefContent').value = '';
+      if (!isDetailEditing) saveData();
+      renderDetailPreferences(target);
+      showToast('已寫入情報庫');
+    }
+
+    function toggleWishFulfilled(friendId, prefId) {
+      const target = isDetailEditing ? detailDraft : friends.find(item => item.id === friendId);
+      if (!target) return;
+      const p = (target.preferences || []).find(item => item.id === prefId);
+      if (p) {
+        p.fulfilled = !p.fulfilled;
+        if (!isDetailEditing) saveData();
+        if (currentDetailId === friendId) renderDetailPreferences(target);
+        renderBirthdaysAndWishlist();
+      }
+    }
+
+    function deletePreference(friendId, prefId) {
+      const target = isDetailEditing ? detailDraft : friends.find(item => item.id === friendId);
+      if (!target) return;
+      target.preferences = (target.preferences || []).filter(item => item.id !== prefId);
+      if (!isDetailEditing) saveData();
+      renderDetailPreferences(target);
+    }
+
+    // ==================== 8. 互動日誌與圖片拍照附圖功能 ====================
+    function handleNewLogPhotos(event) {
+      const files = Array.from(event.target.files || []);
+      if (!files.length) return;
+
+      let processedCount = 0;
+      files.forEach(file => {
+        compressLogPhoto(file, (dataUrl) => {
+          pendingNewLogPhotos.push(dataUrl);
+          processedCount++;
+          if (processedCount === files.length) {
+            renderNewLogPhotosPreview();
+            showToast(`已附上 ${files.length} 張影像`);
+          }
+        });
+      });
+      event.target.value = '';
+    }
+
+    function removePendingLogPhoto(index) {
+      pendingNewLogPhotos.splice(index, 1);
+      renderNewLogPhotosPreview();
+    }
+
+    function renderNewLogPhotosPreview() {
+      const container = document.getElementById('newLogPhotosPreview');
+      if (pendingNewLogPhotos.length === 0) {
+        container.classList.add('hidden');
+        container.innerHTML = '';
+        return;
+      }
+      container.classList.remove('hidden');
+      container.innerHTML = pendingNewLogPhotos.map((src, idx) => `
+        <div class="relative shrink-0">
+          <img src="${src}" class="w-16 h-16 object-cover sketch-photo bg-white" />
+          <button
+            type="button"
+            onclick="removePendingLogPhoto(${idx})"
+            class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[#FAF8F3] border border-[#383633] text-[10px] leading-none flex items-center justify-center shadow"
+          >✕</button>
+        </div>
+      `).join('');
+    }
+
+    function renderDetailLogs(friend) {
+      const container = document.getElementById('detailLogList');
+      const logs = friend.logs || [];
+      if (logs.length === 0) {
+        container.innerHTML = `<p class="text-center text-xs text-[#8C857B] py-4">尚無互動日誌，記下你們的見面點滴吧</p>`;
+        return;
+      }
+
+      container.innerHTML = logs.map(log => {
+        const photos = log.photos || [];
+
+        if (isDetailEditing) {
+          const editPhotosHtml = `
+            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pt-1">
+              ${photos.map((src, pIdx) => `
+                <div class="relative shrink-0">
+                  <img src="${src}" class="w-14 h-14 object-cover sketch-photo bg-white" />
+                  <button
+                    type="button"
+                    onclick="deleteDraftLogPhoto('${log.id}', ${pIdx})"
+                    class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#FAF8F3] border border-[#383633] text-[9px] flex items-center justify-center"
+                  >✕</button>
+                </div>
+              `).join('')}
+              <label class="w-14 h-14 shrink-0 rounded-xl border border-dashed border-[#6FB3D2] bg-[#FCFBF7] flex flex-col items-center justify-center cursor-pointer text-[10px] text-[#655F56]">
+                <span class="text-sm leading-none">+</span>
+                <span>加照</span>
+                <input type="file" accept="image/*" multiple class="hidden" onchange="addDraftLogPhotos('${log.id}', event)" />
+              </label>
+            </div>`;
+
+          return `
+            <div class="sketch-box p-3 space-y-2">
+              <div class="flex items-center gap-2">
+                <input type="date" value="${escapeAttr(log.date)}" oninput="updateDraftLog('${log.id}', 'date', this.value)" class="text-[11px] inline-edit-input" />
+                <input type="text" value="${escapeAttr(log.location || '')}" placeholder="地點" oninput="updateDraftLog('${log.id}', 'location', this.value)" class="flex-1 text-[11px] inline-edit-input" />
+                <button onclick="deleteLog('${friend.id}', '${log.id}')" class="text-xs text-[#B83A2D] font-bold px-1">✕</button>
+              </div>
+              <textarea rows="2" oninput="updateDraftLog('${log.id}', 'notes', this.value)" class="w-full text-xs inline-edit-input">${escapeHtml(log.notes)}</textarea>
+              ${editPhotosHtml}
+            </div>`;
+        }
+
+        // 瀏覽模式：渲染照片縮圖列（點擊可放大）
+        const viewPhotosHtml = photos.length > 0
+          ? `<div class="flex gap-2 overflow-x-auto no-scrollbar pt-1.5">
+              ${photos.map((src, pIdx) => `
+                <img
+                  src="${src}"
+                  alt="互動照片"
+                  onclick="openPhotoLightbox('${log.id}', ${pIdx})"
+                  class="w-20 h-20 object-cover sketch-photo shrink-0 cursor-zoom-in bg-white hover:opacity-95 transition"
+                />
+              `).join('')}
+            </div>`
+          : '';
+
+        return `
+          <div class="sketch-box p-3.5 space-y-1.5">
+            <div class="flex items-center justify-between text-[11px] text-[#655F56]">
+              <span>
+                ${escapeHtml(log.date)}
+                ${log.location ? `· ${escapeHtml(log.location)}` : ''}
+                ${photos.length > 0 ? `<span class="ml-1.5 text-[#4B7A38] font-bold">📷 ${photos.length}</span>` : ''}
+              </span>
+              <button onclick="deleteLog('${friend.id}', '${log.id}')" class="text-[#8C857B]">✕</button>
+            </div>
+            ${log.notes ? `<p class="text-xs leading-relaxed whitespace-pre-line">${escapeHtml(log.notes)}</p>` : ''}
+            ${viewPhotosHtml}
+          </div>`;
+      }).join('');
+    }
+
+    function updateDraftLog(logId, field, value) {
+      if (!detailDraft) return;
+      const log = (detailDraft.logs || []).find(item => item.id === logId);
+      if (log) log[field] = value;
+    }
+
+    function deleteDraftLogPhoto(logId, photoIndex) {
+      if (!detailDraft) return;
+      const log = (detailDraft.logs || []).find(item => item.id === logId);
+      if (log && Array.isArray(log.photos)) {
+        log.photos.splice(photoIndex, 1);
+        renderDetailLogs(detailDraft);
+      }
+    }
+
+    function addDraftLogPhotos(logId, event) {
+      if (!detailDraft) return;
+      const log = (detailDraft.logs || []).find(item => item.id === logId);
+      const files = Array.from(event.target.files || []);
+      if (!log || !files.length) return;
+
+      log.photos = log.photos || [];
+      let done = 0;
+      files.forEach(file => {
+        compressLogPhoto(file, (dataUrl) => {
+          log.photos.push(dataUrl);
+          done++;
+          if (done === files.length) {
+            renderDetailLogs(detailDraft);
+            showToast(`已補上 ${files.length} 張照片`);
+          }
+        });
+      });
+      event.target.value = '';
+    }
+
+    function addInteractionLog() {
+      const target = getActiveDetailTarget();
+      if (!target) return;
+      const date = document.getElementById('newLogDate').value || new Date().toISOString().split('T')[0];
+      const location = document.getElementById('newLogLocation').value.trim();
+      const notes = document.getElementById('newLogNotes').value.trim();
+
+      // 允許純寫文字、或純拍照片加日期地點、或圖文並茂
+      if (!notes && pendingNewLogPhotos.length === 0) {
+        showToast('請輸入互動內容或附上一張照片');
+        return;
+      }
+
+      target.logs = target.logs || [];
+      target.logs.unshift({
+        id: 'l_' + Date.now(),
+        date,
+        location,
+        notes,
+        photos: [...pendingNewLogPhotos]
+      });
+
+      document.getElementById('newLogLocation').value = '';
+      document.getElementById('newLogNotes').value = '';
+      pendingNewLogPhotos = [];
+      renderNewLogPhotosPreview();
+
+      if (!isDetailEditing) saveData();
+      renderDetailLogs(target);
+      showToast('已記下一筆互動日誌');
+    }
+
+    function deleteLog(friendId, logId) {
+      const target = isDetailEditing ? detailDraft : friends.find(item => item.id === friendId);
+      if (!target) return;
+      target.logs = (target.logs || []).filter(item => item.id !== logId);
+      if (!isDetailEditing) saveData();
+      renderDetailLogs(target);
+    }
+
+    // 全螢幕燈箱檢視日誌照片
+    function openPhotoLightbox(logId, photoIndex) {
+      const target = getActiveDetailTarget();
+      if (!target) return;
+      const log = (target.logs || []).find(item => item.id === logId);
+      if (!log || !log.photos || !log.photos[photoIndex]) return;
+
+      document.getElementById('lightboxImg').src = log.photos[photoIndex];
+      const captionParts = [log.date, log.location, log.notes].filter(Boolean);
+      document.getElementById('lightboxCaption').textContent = captionParts.join(' · ');
+      document.getElementById('photoLightbox').classList.remove('hidden');
+    }
+
+    function closePhotoLightbox() {
+      document.getElementById('photoLightbox').classList.add('hidden');
+      document.getElementById('lightboxImg').src = '';
+    }
+
+    // ==================== 9. 歸還名字（封存）與徹底刪除 ====================
+    function confirmArchiveFriend(id) {
+      const f = friends.find(item => item.id === id);
+      if (!f) return;
+      openConfirmDialog(
+        '歸還名字（封存契約）',
+        `確定要將「${f.name}」的契約歸還封存嗎？封存後將停止生辰提醒，並移至封存名錄中保留回憶。`,
+        () => {
+          f.status = 'returned';
+          saveData();
+          closeConfirmDialog();
+          closeDetailModal();
+          showToast(`已歸還「${f.name}」的名字`);
+        }
+      );
+    }
+
+    function restoreFriend(id) {
+      const f = friends.find(item => item.id === id);
+      if (!f) return;
+      f.status = 'active';
+      saveData();
+      renderAll();
+      showToast(`已重新簽訂「${f.name}」的契約`);
+    }
+
+    function confirmDeleteFriend(id) {
+      const f = friends.find(item => item.id === id);
+      if (!f) return;
+      openConfirmDialog(
+        '徹底銷毀契約',
+        `此動作將永久刪除「${f.name}」的所有資料、簽名與日誌，無法復原。確定繼續嗎？`,
+        () => {
+          friends = friends.filter(item => item.id !== id);
+          saveData();
+          closeConfirmDialog();
+          closeDetailModal();
+          showToast('契約已永久銷毀');
+        }
+      );
+    }
+
+    // ==================== 10. JSON 備份匯出與匯入 ====================
+    function exportBackup() {
+      const dataStr = JSON.stringify(friends, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const dateStr = new Date().toISOString().split('T')[0];
+      a.href = url;
+      a.download = `友人帳備份_${dateStr}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('已匯出 JSON 備份檔');
+    }
+
+    function importBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (Array.isArray(parsed)) {
+            friends = parsed;
+            saveData();
+            renderAll();
+            showToast(`成功還原 ${friends.length} 份契約`);
+          } else {
+            showToast('備份檔格式不正確');
+          }
+        } catch (err) {
+          showToast('讀取備份檔失敗');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetDemoData() {
+      openConfirmDialog(
+        '重設範例資料',
+        '這將會清除目前的測試修改並恢復初始的 2 筆範例友人資料，確定嗎？',
+        () => {
+          friends = JSON.parse(JSON.stringify(INITIAL_DATA));
+          saveData();
+          closeConfirmDialog();
+          renderAll();
+          showToast('已恢復初始範例資料');
+        }
+      );
+    }
+
+    // ==================== 11. 工具函式 ====================
+    function showToast(msg) {
+      const box = document.getElementById('toastBox');
+      box.textContent = msg;
+      box.classList.remove('hidden');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        box.classList.add('hidden');
+      }, 2400);
+    }
+
+    function openConfirmDialog(title, message, onConfirm) {
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmMessage').textContent = message;
+      document.getElementById('confirmOkBtn').onclick = onConfirm;
+      document.getElementById('confirmDialog').classList.remove('hidden');
+    }
+
+    function closeConfirmDialog() {
+      document.getElementById('confirmDialog').classList.add('hidden');
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function escapeAttr(str) {
+      return escapeHtml(str).replace(/'/g, '&#39;');
+    }
+
+    window.onload = function() {
+      loadData();
+      renderAll();
+    };
+  </script>
+</body>
+</html>

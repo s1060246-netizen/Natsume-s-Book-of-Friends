@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="友人帳" />
   <title>友人帳｜水彩手繪契約簿</title>
- <link rel="apple-touch-icon" href="icon.png" />
+  <link rel="apple-touch-icon" href="icon.png" />
   <link rel="icon" type="image/png" href="icon.png" />
 
   <!-- Tailwind CSS -->
@@ -30,6 +30,11 @@
       --ink-charcoal: #383633;
       --ink-muted: #787268;
       --seal-red: #B83A2D;
+    }
+
+    html {
+      font-size: 16px;
+      transition: font-size 0.15s ease;
     }
 
     * {
@@ -120,7 +125,7 @@
       background-color: #FCFBF7;
       border: 1.3px dashed #6FB3D2;
       border-radius: 10px;
-      padding: 3px 8px;
+      padding: 6px 10px;
       transition: border-color 0.15s ease, background-color 0.15s ease;
     }
     .inline-edit-input:focus {
@@ -166,7 +171,7 @@
     }
 
     .pb-safe {
-      padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 74px);
+      padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 78px);
     }
     .nav-safe {
       padding-bottom: env(safe-area-inset-bottom, 10px);
@@ -193,12 +198,16 @@
         <div>
           <div class="flex items-center gap-2.5">
             <h1 class="font-brush text-4xl tracking-widest text-[#383633]">友人帳</h1>
-            <span class="seal-stamp">契</span>
+            <span id="headerSealStamp" class="seal-stamp">契</span>
           </div>
-          <p class="text-xs text-[#655F56] mt-1 tracking-wide">以水彩與筆墨，記下每一次相遇的溫度</p>
+          <p id="headerSubtitle" class="text-xs text-[#655F56] mt-1 tracking-wide">以水彩與筆墨，記下每一次相遇的溫度</p>
         </div>
-        <div class="text-right">
-          <span id="activeCountBadge" class="sketch-pill bg-[#FAF8F3]/80 px-3 py-1 text-xs font-bold">
+        <div class="flex flex-col items-end gap-1.5">
+          <button onclick="switchTab('owner')" class="flex items-center gap-1.5 sketch-pill bg-[#FAF8F3]/85 px-2.5 py-1 text-xs">
+            <img id="headerOwnerAvatar" src="" alt="帳主" class="w-5 h-5 rounded-full object-cover border border-[#383633]" />
+            <span id="headerOwnerName" class="font-bold max-w-[5.5rem] truncate">帳主</span>
+          </button>
+          <span id="activeCountBadge" class="sketch-pill bg-[#FAF8F3]/80 px-3 py-0.5 text-[11px] font-bold">
             契約 0 份
           </span>
         </div>
@@ -273,7 +282,7 @@
       <section class="sketch-box p-4 space-y-3">
         <h3 class="font-brush text-xl">友人帳備份與遷移</h3>
         <p class="text-xs text-[#787268] leading-relaxed">
-          所有契約、手寫簽名與照片皆安全儲存於您的手機本機瀏覽器中。建議定期匯出 JSON 備份檔保存至 iCloud 或「檔案」App。
+          所有契約、帳主個人資料、手寫簽名與照片皆安全儲存於您的手機本機瀏覽器中。建議定期匯出 JSON 備份檔保存至 iCloud 或「檔案」App。
         </p>
         <div class="flex gap-2.5 pt-1">
           <button onclick="exportBackup()" class="flex-1 sketch-btn bg-[#A8D5E5]/60 py-2.5 text-sm font-bold flex items-center justify-center gap-1.5">
@@ -291,8 +300,149 @@
       </section>
     </main>
 
+    <!-- ==================== 分頁四：帳主個人頁面（使用者名片與字級設定） ==================== -->
+    <main id="tab-owner" class="hidden px-4 space-y-5">
+      <!-- 帳主個人名片卡片 -->
+      <section class="sketch-box p-4 space-y-4">
+        <div class="flex items-center justify-between border-b border-dashed border-[#383633]/20 pb-2.5">
+          <div class="flex items-center gap-2">
+            <h2 class="font-brush text-2xl">帳主名片</h2>
+            <span id="ownerCardSeal" class="seal-stamp">契</span>
+          </div>
+          <div id="ownerViewActions">
+            <button onclick="enterOwnerEditMode()" class="sketch-btn bg-[#FAF8F3] px-3.5 py-1 text-xs font-bold">編輯個人資料</button>
+          </div>
+          <div id="ownerEditActions" class="hidden flex gap-2">
+            <button onclick="cancelOwnerEditMode()" class="sketch-btn bg-[#FAF8F3] px-3 py-1 text-xs">取消</button>
+            <button onclick="saveOwnerEditMode()" class="sketch-btn bg-[#7DB865]/80 px-3.5 py-1 text-xs font-bold">完成</button>
+          </div>
+        </div>
+
+        <!-- 瀏覽態：帳主名片展示 -->
+        <div id="ownerViewBody" class="space-y-3.5">
+          <div class="flex items-center gap-3.5">
+            <img id="ownerViewAvatar" src="" alt="帳主頭像" class="w-18 h-18 w-[4.5rem] h-[4.5rem] object-cover sketch-avatar bg-[#F3EFE6]" />
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 id="ownerViewName" class="font-brush text-3xl truncate">友人帳主人</h3>
+                <span id="ownerViewNickname" class="text-xs text-[#787268]"></span>
+              </div>
+              <p id="ownerViewBirthday" class="text-xs text-[#5A554C] mt-1">未設定生辰</p>
+              <p id="ownerViewContact" class="text-xs text-[#4B7A38] mt-0.5 truncate"></p>
+            </div>
+          </div>
+
+          <p id="ownerViewBio" class="text-xs text-[#655F56] leading-relaxed bg-[#F3EFE6]/70 rounded-xl p-3">
+            尚未填寫個人簡介或交友小語。
+          </p>
+
+          <div id="ownerViewPrefWrap" class="hidden space-y-1.5">
+            <span class="text-[11px] font-bold text-[#787268]">我的喜好與話題（分享給新朋友）</span>
+            <p id="ownerViewPrefs" class="text-xs leading-relaxed whitespace-pre-line bg-[#FCFBF7] border border-[#383633]/15 rounded-xl p-3"></p>
+          </div>
+
+          <div id="ownerViewSigWrap" class="hidden bg-[#FCFBF7] rounded-xl p-2.5 border border-[#383633]/20 flex items-center justify-between">
+            <span class="text-[11px] text-[#787268]">帳主親筆印記</span>
+            <img id="ownerViewSigImg" src="" alt="帳主簽名" class="h-14 object-contain" />
+            <span id="ownerViewSigSeal" class="seal-stamp">契</span>
+          </div>
+        </div>
+
+        <!-- 編輯態：帳主資料原地編輯 -->
+        <div id="ownerEditBody" class="hidden space-y-3.5">
+          <div class="flex items-center gap-3.5">
+            <div class="relative shrink-0">
+              <img id="ownerEditAvatar" src="" alt="頭像預覽" class="w-[4.5rem] h-[4.5rem] object-cover sketch-avatar bg-[#F3EFE6]" />
+              <label class="absolute inset-0 rounded-full bg-[#383633]/55 text-[#FAF8F3] flex items-center justify-center cursor-pointer text-[11px] font-bold">
+                更換
+                <input type="file" accept="image/*" class="hidden" onchange="handleOwnerAvatarUpload(event)" />
+              </label>
+            </div>
+            <div class="flex-1 space-y-2">
+              <div class="flex gap-2">
+                <input id="editOwnerName" type="text" placeholder="你的名字" class="w-3/5 font-brush text-xl inline-edit-input" />
+                <input id="editOwnerNickname" type="text" placeholder="暱稱" class="w-2/5 text-xs inline-edit-input" />
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-[#787268] shrink-0">專屬印章字：</span>
+                <input id="editOwnerSeal" type="text" maxlength="1" placeholder="契" class="w-12 text-center font-brush text-base inline-edit-input" />
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] text-[#787268] mb-1">你的生辰日期</label>
+              <input id="editOwnerBirthday" type="date" class="w-full text-xs inline-edit-input" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-[#787268] mb-1">聯絡方式 / IG / LINE</label>
+              <input id="editOwnerContact" type="text" placeholder="例如：IG @yuujin" class="w-full text-xs inline-edit-input" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-[#787268] mb-1">個人簡介 / 座右銘</label>
+            <input id="editOwnerBio" type="text" placeholder="寫一句介紹自己的話..." class="w-full text-xs inline-edit-input" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-[#787268] mb-1">我的喜好、飲食習慣或興趣話題</label>
+            <textarea id="editOwnerPrefs" rows="2" placeholder="例如：喜歡手沖咖啡、看展、貓派，不吃辣..." class="w-full text-xs inline-edit-input"></textarea>
+          </div>
+
+          <div class="bg-[#FCFBF7] rounded-xl p-2.5 border border-[#383633]/20 flex items-center justify-between gap-2">
+            <span class="text-[11px] text-[#787268] shrink-0">帳主簽名</span>
+            <img id="ownerEditSigImg" src="" alt="簽名" class="hidden h-12 object-contain" />
+            <span id="ownerEditSigEmpty" class="text-xs text-[#9A9388]">尚未簽署</span>
+            <button type="button" onclick="openSignatureModal('owner')" class="sketch-btn bg-[#A8D5E5]/60 px-2.5 py-1 text-[11px] font-bold shrink-0">
+              簽署 / 重簽
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 整體字型大小設定卡片 -->
+      <section class="sketch-box p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="font-brush text-xl">字型大小設定</h3>
+            <p class="text-[11px] text-[#787268]">即時調整全站文字比例，自動記憶於本機</p>
+          </div>
+          <span id="fontSizeCurrentLabel" class="sketch-pill bg-[#A8D5E5]/45 px-2.5 py-0.5 text-xs font-bold">標準</span>
+        </div>
+
+        <div class="grid grid-cols-4 gap-2 pt-1">
+          <button type="button" onclick="setGlobalFontSize('sm')" id="fontBtn-sm" class="sketch-btn py-2 text-xs">小</button>
+          <button type="button" onclick="setGlobalFontSize('md')" id="fontBtn-md" class="sketch-btn py-2 text-sm">標準</button>
+          <button type="button" onclick="setGlobalFontSize('lg')" id="fontBtn-lg" class="sketch-btn py-2 text-base">大</button>
+          <button type="button" onclick="setGlobalFontSize('xl')" id="fontBtn-xl" class="sketch-btn py-2 text-lg">特大</button>
+        </div>
+      </section>
+
+      <!-- 友人帳統計概覽 -->
+      <section class="sketch-box watercolor-grass p-4">
+        <h3 class="font-brush text-xl mb-2.5">契約簿足跡統計</h3>
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="bg-[#FAF8F3]/85 rounded-xl p-2.5 border border-[#383633]/15">
+            <p id="statFriendsCount" class="font-brush text-2xl text-[#383633]">0</p>
+            <p class="text-[11px] text-[#655F56]">結識友人</p>
+          </div>
+          <div class="bg-[#FAF8F3]/85 rounded-xl p-2.5 border border-[#383633]/15">
+            <p id="statLogsCount" class="font-brush text-2xl text-[#383633]">0</p>
+            <p class="text-[11px] text-[#655F56]">互動日誌</p>
+          </div>
+          <div class="bg-[#FAF8F3]/85 rounded-xl p-2.5 border border-[#383633]/15">
+            <p id="statPhotosCount" class="font-brush text-2xl text-[#383633]">0</p>
+            <p class="text-[11px] text-[#655F56]">回憶影像</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
     <!-- 右下角手繪懸浮新增按鈕 -->
     <button
+      id="floatingCreateBtn"
       onclick="openCreateModal()"
       aria-label="新增契約"
       class="fixed right-5 bottom-24 z-30 sketch-btn bg-gradient-to-br from-[#A8D5E5] to-[#7DB865]/70 px-4 py-3 flex items-center gap-1.5 shadow-md"
@@ -303,40 +453,42 @@
       <span class="font-brush text-lg tracking-wider">立契</span>
     </button>
 
-    <!-- 底部手繪細線導航列 -->
+    <!-- 底部手繪細線導航列（四分頁） -->
     <nav class="fixed bottom-0 left-0 right-0 z-30 bg-[#FAF8F3]/95 backdrop-blur-sm border-t-[1.5px] border-[#383633] nav-safe">
       <div class="max-w-md mx-auto flex justify-around items-center pt-2 pb-1">
-        <button onclick="switchTab('directory')" id="nav-directory" class="nav-item flex flex-col items-center px-4 py-1 text-[#383633] font-bold">
+        <button onclick="switchTab('directory')" id="nav-directory" class="nav-item flex flex-col items-center px-3 py-1 text-[#383633] font-bold">
           <svg class="w-5 h-5 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
           </svg>
           <span class="text-xs">名錄</span>
         </button>
 
-        <button onclick="switchTab('birthdays')" id="nav-birthdays" class="nav-item flex flex-col items-center px-4 py-1 text-[#787268]">
+        <button onclick="switchTab('birthdays')" id="nav-birthdays" class="nav-item flex flex-col items-center px-3 py-1 text-[#787268]">
           <svg class="w-5 h-5 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
             <path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
           </svg>
-          <span class="text-xs">生辰與心願</span>
+          <span class="text-xs">生辰心願</span>
         </button>
 
-        <button onclick="switchTab('archive')" id="nav-archive" class="nav-item flex flex-col items-center px-4 py-1 text-[#787268]">
+        <button onclick="switchTab('owner')" id="nav-owner" class="nav-item flex flex-col items-center px-3 py-1 text-[#787268]">
+          <svg class="w-5 h-5 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          <span class="text-xs">帳主名片</span>
+        </button>
+
+        <button onclick="switchTab('archive')" id="nav-archive" class="nav-item flex flex-col items-center px-3 py-1 text-[#787268]">
           <svg class="w-5 h-5 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>
           </svg>
-          <span class="text-xs">封存與備份</span>
+          <span class="text-xs">封存備份</span>
         </button>
       </div>
     </nav>
   </div>
 
-  <!-- 共享的分類標籤建議清單 -->
-  <datalist id="tagSuggestions">
-    <option value="摯友"></option>
-    <option value="大學同學"></option>
-    <option value="職場夥伴"></option>
-    <option value="旅途偶遇"></option>
-  </datalist>
+  <!-- 共享的動態分類標籤建議清單（由 JS 動態填入預設 + 自訂標籤） -->
+  <datalist id="tagSuggestions"></datalist>
 
   <!-- ==================== 彈窗 1：新增好友契約（立契） ==================== -->
   <div id="createFriendModal" class="hidden fixed inset-0 z-40 bg-[#383633]/45 backdrop-blur-[2px] overflow-y-auto">
@@ -380,7 +532,7 @@
           </div>
           <div>
             <label class="block text-xs font-bold mb-1">分類標籤</label>
-            <input id="createTag" type="text" placeholder="例如：大學同學" list="tagSuggestions" class="w-full sketch-pill bg-[#FAF8F3] px-3 py-2 text-sm focus:outline-none" />
+            <input id="createTag" type="text" placeholder="可選既有或輸入新標籤" list="tagSuggestions" class="w-full sketch-pill bg-[#FAF8F3] px-3 py-2 text-sm focus:outline-none" />
           </div>
         </div>
 
@@ -440,7 +592,7 @@
     </div>
   </div>
 
-  <!-- ==================== 彈窗 3：好友契約詳情頁（支援原地 iPhone 式直接編輯） ==================== -->
+  <!-- ==================== 彈窗 3：好友契約詳情頁（支援純淨個人資料原地編輯） ==================== -->
   <div id="detailModal" class="hidden fixed inset-0 z-40 bg-[#F3EFE6] overflow-y-auto">
     <div class="max-w-md mx-auto min-h-screen pb-28">
       <!-- 頂部導航 -->
@@ -456,17 +608,17 @@
 
         <!-- 編輯模式頂部提示列 -->
         <div id="detailEditHeader" class="hidden flex items-center justify-between mb-4">
-          <span class="sketch-pill bg-[#A8D5E5]/60 px-3 py-1 text-xs font-bold">正在修訂契約內容</span>
+          <span class="sketch-pill bg-[#A8D5E5]/60 px-3 py-1 text-xs font-bold">正在修訂個人資料</span>
           <span class="text-xs text-[#655F56]">點擊欄位即可直接修改</span>
         </div>
 
-        <!-- 好友主資訊卡片 -->
-        <div class="sketch-box p-4 relative">
+        <!-- 好友主資訊卡片（編輯模式下會自動拉大內距並聚焦顯示） -->
+        <div id="detailMainCard" class="sketch-box p-4 relative transition-all">
           <div class="flex items-start gap-3.5">
             <!-- 頭像區 -->
             <div class="relative shrink-0">
-              <img id="detailAvatar" src="" alt="頭像" class="w-16 h-16 object-cover sketch-avatar bg-[#F3EFE6]" />
-              <label id="detailAvatarEditOverlay" class="hidden absolute inset-0 rounded-full bg-[#383633]/55 text-[#FAF8F3] flex flex-col items-center justify-center cursor-pointer text-[10px] font-bold">
+              <img id="detailAvatar" src="" alt="頭像" class="w-16 h-16 object-cover sketch-avatar bg-[#F3EFE6] transition-all" />
+              <label id="detailAvatarEditOverlay" class="hidden absolute inset-0 rounded-full bg-[#383633]/55 text-[#FAF8F3] flex flex-col items-center justify-center cursor-pointer text-[11px] font-bold">
                 <span>更換</span>
                 <input type="file" accept="image/*" class="hidden" onchange="handleDetailAvatarUpload(event)" />
               </label>
@@ -481,6 +633,7 @@
 
             <!-- 姓名 / 暱稱 / 標籤 / 生日 -->
             <div class="flex-1 min-w-0">
+              <!-- 瀏覽態文字 -->
               <div id="detailIdentityView">
                 <div class="flex items-center gap-2 flex-wrap">
                   <h2 id="detailName" class="font-brush text-3xl truncate"></h2>
@@ -493,39 +646,46 @@
                 <div id="detailBondView" class="text-[11px] text-[#787268] mt-1.5 tracking-widest"></div>
               </div>
 
-              <div id="detailIdentityEdit" class="hidden space-y-2">
-                <div class="flex items-center gap-1.5">
-                  <input id="editDetailName" type="text" placeholder="姓名 *" class="w-1/2 font-brush text-xl inline-edit-input" />
-                  <input id="editDetailNickname" type="text" placeholder="暱稱" class="w-1/2 text-xs inline-edit-input" />
+              <!-- 編輯態原地輸入框（放大間距與輸入框高度） -->
+              <div id="detailIdentityEdit" class="hidden space-y-2.5">
+                <div class="space-y-1.5">
+                  <label class="block text-[11px] text-[#787268]">姓名與常用暱稱</label>
+                  <div class="flex items-center gap-2">
+                    <input id="editDetailName" type="text" placeholder="姓名 *" class="w-1/2 font-brush text-xl inline-edit-input" />
+                    <input id="editDetailNickname" type="text" placeholder="暱稱" class="w-1/2 text-sm inline-edit-input" />
+                  </div>
                 </div>
-                <div class="flex items-center gap-1.5">
-                  <input id="editDetailTag" type="text" placeholder="分類標籤" list="tagSuggestions" class="w-5/12 text-xs inline-edit-input" />
-                  <input id="editDetailBirthday" type="date" class="w-7/12 text-xs inline-edit-input" />
+                <div class="space-y-1.5">
+                  <label class="block text-[11px] text-[#787268]">分類標籤與生辰日期</label>
+                  <div class="flex items-center gap-2">
+                    <input id="editDetailTag" type="text" placeholder="選擇或輸入新標籤" list="tagSuggestions" class="w-5/12 text-xs inline-edit-input" />
+                    <input id="editDetailBirthday" type="date" class="w-7/12 text-xs inline-edit-input" />
+                  </div>
                 </div>
-                <div class="flex items-center gap-1 pt-0.5">
-                  <span class="text-[11px] text-[#787268] mr-1">羈絆：</span>
-                  <div id="editDetailBondGroup" class="flex gap-1"></div>
+                <div class="pt-0.5">
+                  <label class="block text-[11px] text-[#787268] mb-1">羈絆深淺</label>
+                  <div id="editDetailBondGroup" class="flex gap-1.5"></div>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- 相遇契機 -->
-          <div class="mt-3 pt-2.5 border-t border-dashed border-[#383633]/20">
+          <div class="mt-4 pt-3 border-t border-dashed border-[#383633]/20">
             <p id="detailContext" class="text-xs text-[#655F56]"></p>
             <div id="detailContextEditWrap" class="hidden">
-              <label class="block text-[11px] text-[#787268] mb-1">相遇契機</label>
-              <input id="editDetailContext" type="text" placeholder="記錄你們如何認識..." class="w-full text-xs inline-edit-input" />
+              <label class="block text-[11px] text-[#787268] mb-1.5">相遇契機</label>
+              <textarea id="editDetailContext" rows="2" placeholder="記錄你們如何認識..." class="w-full text-xs inline-edit-input"></textarea>
             </div>
           </div>
 
           <!-- 手寫簽名展示 -->
-          <div id="detailSignatureWrap" class="hidden mt-3 bg-[#FCFBF7] rounded-xl p-2.5 border border-[#383633]/20 flex items-center justify-between gap-2">
+          <div id="detailSignatureWrap" class="hidden mt-4 bg-[#FCFBF7] rounded-xl p-3 border border-[#383633]/20 flex items-center justify-between gap-2">
             <span class="text-[11px] text-[#787268] shrink-0">親筆契約</span>
-            <img id="detailSignatureImg" src="" alt="親筆簽名" class="h-14 object-contain" />
+            <img id="detailSignatureImg" src="" alt="親筆簽名" class="h-16 object-contain" />
             <span id="detailSignatureEmptyHint" class="hidden text-xs text-[#9A9388]">尚未簽署</span>
             <div class="flex items-center gap-1.5 shrink-0">
-              <button id="detailResignBtn" type="button" onclick="openSignatureModal('detail')" class="hidden sketch-btn bg-[#A8D5E5]/60 px-2.5 py-1 text-[11px] font-bold">
+              <button id="detailResignBtn" type="button" onclick="openSignatureModal('detail')" class="hidden sketch-btn bg-[#A8D5E5]/60 px-3 py-1.5 text-xs font-bold">
                 簽署 / 重簽
               </button>
               <span id="detailSealStamp" class="seal-stamp">契</span>
@@ -534,8 +694,8 @@
         </div>
       </div>
 
-      <!-- 詳情內部分頁切換：情報心願 vs 互動日誌 -->
-      <div class="px-4 mt-2">
+      <!-- 詳情內部分頁切換（進入個人資料編輯模式時會整塊隱藏，讓編輯畫面更寬敞專注） -->
+      <div id="detailSubTabsContainer" class="px-4 mt-2">
         <div class="flex gap-2 mb-4">
           <button id="subTabPrefBtn" onclick="switchDetailSubTab('pref')" class="flex-1 sketch-btn bg-[#A8D5E5]/70 py-2 text-sm font-bold">情報與送禮心願</button>
           <button id="subTabLogBtn" onclick="switchDetailSubTab('log')" class="flex-1 sketch-btn bg-[#FAF8F3] py-2 text-sm">互動日誌</button>
@@ -543,7 +703,7 @@
 
         <!-- 子分頁 A：情報與送禮心願 -->
         <div id="detailPrefSection" class="space-y-3">
-          <div id="addPrefBox" class="sketch-box p-3 space-y-2 bg-[#FAF8F3]">
+          <div class="sketch-box p-3 space-y-2 bg-[#FAF8F3]">
             <div class="flex gap-2">
               <select id="newPrefCategory" class="sketch-pill bg-[#F3EFE6] px-2.5 py-1.5 text-xs font-bold focus:outline-none">
                 <option value="wishlist">送禮心願</option>
@@ -558,16 +718,15 @@
           <div id="detailPrefList" class="space-y-2"></div>
         </div>
 
-        <!-- 子分頁 B：互動日誌（新增拍照與附圖功能） -->
+        <!-- 子分頁 B：互動日誌（含拍照與附圖） -->
         <div id="detailLogSection" class="hidden space-y-3">
-          <div id="addLogBox" class="sketch-box p-3 space-y-2.5 bg-[#FAF8F3]">
+          <div class="sketch-box p-3 space-y-2.5 bg-[#FAF8F3]">
             <div class="flex gap-2">
               <input id="newLogDate" type="date" class="sketch-pill bg-[#F3EFE6] px-2.5 py-1.5 text-xs focus:outline-none" />
               <input id="newLogLocation" type="text" placeholder="見面地點（如：大安森林公園）" class="flex-1 sketch-pill bg-[#F3EFE6] px-3 py-1.5 text-xs focus:outline-none" />
             </div>
             <textarea id="newLogNotes" rows="2" placeholder="記錄今天聊了什麼、對方的近況..." class="w-full rounded-xl border border-[#383633] bg-[#F3EFE6] px-3 py-2 text-xs focus:outline-none"></textarea>
 
-            <!-- 拍照 / 選擇相簿圖片區 -->
             <div class="space-y-2">
               <div class="flex items-center justify-between">
                 <label class="sketch-btn bg-[#F3EFE6] px-3 py-1.5 text-xs font-bold cursor-pointer inline-flex items-center gap-1.5">
@@ -580,8 +739,6 @@
                 </label>
                 <span class="text-[11px] text-[#8C857B]">支援多張（自動壓縮留存）</span>
               </div>
-
-              <!-- 待上傳照片縮圖預覽列 -->
               <div id="newLogPhotosPreview" class="hidden flex gap-2 overflow-x-auto no-scrollbar py-1"></div>
             </div>
 
@@ -590,11 +747,11 @@
 
           <div id="detailLogList" class="space-y-2.5"></div>
         </div>
+      </div>
 
-        <!-- 徹底刪除按鈕（僅在編輯模式下顯示） -->
-        <div id="detailDeleteSection" class="hidden mt-8 pt-4 border-t border-dashed border-[#383633]/20 text-center">
-          <button id="detailDeleteBtn" class="text-xs text-[#B83A2D] underline">徹底銷毀此份契約（永久刪除）</button>
-        </div>
+      <!-- 徹底刪除按鈕（僅在個人資料編輯模式下顯示於下方） -->
+      <div id="detailDeleteSection" class="hidden px-4 mt-8 pt-4 border-t border-dashed border-[#383633]/20 text-center">
+        <button id="detailDeleteBtn" class="text-xs text-[#B83A2D] underline">徹底銷毀此份契約（永久刪除）</button>
       </div>
 
       <!-- 底部固定操作列（類 iPhone 圖片編輯器：左下取消、右下完成） -->
@@ -603,7 +760,7 @@
           <button type="button" onclick="cancelDetailEditMode()" class="sketch-btn bg-[#FAF8F3] px-6 py-2.5 text-sm text-[#5A554C]">
             取消
           </button>
-          <span class="font-brush text-base text-[#787268]">修訂契約</span>
+          <span class="font-brush text-base text-[#787268]">修訂個人資料</span>
           <button type="button" onclick="commitDetailEditMode()" class="sketch-btn bg-[#7DB865]/80 px-6 py-2.5 text-sm font-bold text-[#383633]">
             完成
           </button>
@@ -639,6 +796,17 @@
   <script>
     // ==================== 1. 資料狀態與預設範例 ====================
     const STORAGE_KEY = 'yuujinchou_watercolor_v1';
+    const OWNER_STORAGE_KEY = 'yuujinchou_owner_v1';
+    const FONT_SIZE_KEY = 'yuujinchou_fontsize_v1';
+
+    const DEFAULT_TAGS = ['摯友', '大學同學', '職場夥伴', '旅途偶遇'];
+
+    const FONT_SIZE_CONFIG = {
+      sm: { px: '14.5px', label: '小（精巧）' },
+      md: { px: '16px',   label: '標準' },
+      lg: { px: '17.5px', label: '大（舒適）' },
+      xl: { px: '19px',   label: '特大（護眼）' }
+    };
 
     function getDefaultAvatar(seed = 1) {
       const colors = ['#A8D5E5', '#A3CE8B', '#E5C6A8', '#D9B3B0'];
@@ -712,7 +880,21 @@
       }
     ];
 
+    const INITIAL_OWNER = {
+      name: '友人帳主人',
+      nickname: '',
+      birthday: '',
+      contact: '',
+      bio: '以水彩與筆墨，記下每一次相遇的溫度。',
+      prefs: '',
+      sealChar: '契',
+      avatar: getDefaultAvatar(2),
+      signature: ''
+    };
+
     let friends = [];
+    let ownerProfile = { ...INITIAL_OWNER };
+    let currentFontSize = 'md';
     let selectedTag = '全部';
 
     // 新增（立契）彈窗暫存狀態
@@ -725,10 +907,14 @@
     let isDetailEditing = false;
     let detailDraft = null;
 
+    // 帳主個人頁面編輯狀態
+    let isOwnerEditing = false;
+    let ownerDraft = null;
+
     // 待新增日誌的暫存照片陣列
     let pendingNewLogPhotos = [];
 
-    // 簽名畫布來源模式：'create' | 'detail'
+    // 簽名畫布來源模式：'create' | 'detail' | 'owner'
     let signatureTargetMode = 'create';
 
     function loadData() {
@@ -743,6 +929,21 @@
       } catch (e) {
         friends = JSON.parse(JSON.stringify(INITIAL_DATA));
       }
+
+      try {
+        const rawOwner = localStorage.getItem(OWNER_STORAGE_KEY);
+        if (rawOwner) {
+          ownerProfile = { ...INITIAL_OWNER, ...JSON.parse(rawOwner) };
+        }
+      } catch (e) {
+        ownerProfile = { ...INITIAL_OWNER };
+      }
+
+      const savedFont = localStorage.getItem(FONT_SIZE_KEY);
+      if (savedFont && FONT_SIZE_CONFIG[savedFont]) {
+        currentFontSize = savedFont;
+      }
+      applyFontSize(currentFontSize, false);
     }
 
     function saveData() {
@@ -753,7 +954,58 @@
       }
     }
 
-    // ==================== 2. 生日倒數計算邏輯 ====================
+    function saveOwnerData() {
+      try {
+        localStorage.setItem(OWNER_STORAGE_KEY, JSON.stringify(ownerProfile));
+      } catch (e) {
+        showToast('帳主資料儲存失敗');
+      }
+    }
+
+    // ==================== 2. 整體字型大小設定 ====================
+    function setGlobalFontSize(sizeKey) {
+      applyFontSize(sizeKey, true);
+    }
+
+    function applyFontSize(sizeKey, notify = true) {
+      const cfg = FONT_SIZE_CONFIG[sizeKey] || FONT_SIZE_CONFIG.md;
+      currentFontSize = sizeKey;
+      document.documentElement.style.fontSize = cfg.px;
+      localStorage.setItem(FONT_SIZE_KEY, sizeKey);
+
+      const labelEl = document.getElementById('fontSizeCurrentLabel');
+      if (labelEl) labelEl.textContent = cfg.label;
+
+      ['sm', 'md', 'lg', 'xl'].forEach(k => {
+        const btn = document.getElementById(`fontBtn-${k}`);
+        if (!btn) return;
+        if (k === sizeKey) {
+          btn.classList.add('bg-[#A3CE8B]/75', 'font-bold');
+          btn.classList.remove('bg-[#FAF8F3]', 'text-[#655F56]');
+        } else {
+          btn.classList.remove('bg-[#A3CE8B]/75', 'font-bold');
+          btn.classList.add('bg-[#FAF8F3]', 'text-[#655F56]');
+        }
+      });
+
+      if (notify) {
+        showToast(`字型已調整為「${cfg.label}」`);
+      }
+    }
+
+    // ==================== 3. 動態分類標籤集合（自動記憶自訂標籤） ====================
+    function updateTagSuggestionsDatalist() {
+      const customTags = friends.map(f => (f.tag || '').trim()).filter(Boolean);
+      const mergedTags = [...new Set([...DEFAULT_TAGS, ...customTags])];
+      const datalist = document.getElementById('tagSuggestions');
+      if (datalist) {
+        datalist.innerHTML = mergedTags
+          .map(t => `<option value="${escapeAttr(t)}"></option>`)
+          .join('');
+      }
+    }
+
+    // ==================== 4. 生日倒數計算邏輯 ====================
     function getDaysUntilBirthday(birthdayStr) {
       if (!birthdayStr) return null;
       const parts = birthdayStr.split('-');
@@ -781,16 +1033,24 @@
       return `${dateText}（還有 ${days} 天）`;
     }
 
-    // ==================== 3. 主畫面渲染邏輯 ====================
+    // ==================== 5. 主畫面渲染邏輯 ====================
     function renderAll() {
-      renderBannerAndBadge();
+      updateTagSuggestionsDatalist();
+      renderHeaderOwnerAndBanner();
       renderTagFilters();
       renderDirectory();
       renderBirthdaysAndWishlist();
+      renderOwnerPage();
       renderArchive();
     }
 
-    function renderBannerAndBadge() {
+    function renderHeaderOwnerAndBanner() {
+      // 同步頂部帳主印章、頭像與名稱
+      const sealChar = (ownerProfile.sealChar || '契').trim() || '契';
+      document.getElementById('headerSealStamp').textContent = sealChar;
+      document.getElementById('headerOwnerAvatar').src = ownerProfile.avatar || getDefaultAvatar(2);
+      document.getElementById('headerOwnerName').textContent = ownerProfile.nickname || ownerProfile.name || '帳主';
+
       const activeFriends = friends.filter(f => f.status === 'active');
       document.getElementById('activeCountBadge').textContent = `契約 ${activeFriends.length} 份`;
 
@@ -820,7 +1080,7 @@
       container.innerHTML = tags.map(tag => {
         const isSelected = tag === selectedTag;
         const bgClass = isSelected ? 'bg-[#A8D5E5]/80 font-bold' : 'bg-[#FAF8F3] text-[#655F56]';
-        return `<button onclick="selectTag('${tag}')" class="sketch-pill ${bgClass} px-3.5 py-1 text-xs shrink-0 transition">${tag}</button>`;
+        return `<button onclick="selectTag('${escapeAttr(tag)}')" class="sketch-pill ${bgClass} px-3.5 py-1 text-xs shrink-0 transition">${escapeHtml(tag)}</button>`;
       }).join('');
     }
 
@@ -966,9 +1226,10 @@
     }
 
     function switchTab(tabName) {
-      ['directory', 'birthdays', 'archive'].forEach(t => {
+      ['directory', 'birthdays', 'owner', 'archive'].forEach(t => {
         document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tabName);
         const navBtn = document.getElementById(`nav-${t}`);
+        if (!navBtn) return;
         if (t === tabName) {
           navBtn.classList.remove('text-[#787268]');
           navBtn.classList.add('text-[#383633]', 'font-bold');
@@ -977,11 +1238,146 @@
           navBtn.classList.remove('text-[#383633]', 'font-bold');
         }
       });
+
+      // 進入帳主名片頁時隱藏右下角「+ 立契」按鈕，避免遮擋設定按鈕
+      document.getElementById('floatingCreateBtn').classList.toggle('hidden', tabName === 'owner');
       renderAll();
     }
 
-    // ==================== 4. 圖片壓縮通用函式 ====================
-    // 頭像專用：居中裁切正方形
+    // ==================== 6. 帳主個人頁面（使用者名片） ====================
+    function renderOwnerPage() {
+      const src = isOwnerEditing ? ownerDraft : ownerProfile;
+      const sealChar = (src.sealChar || '契').trim() || '契';
+
+      document.getElementById('ownerCardSeal').textContent = sealChar;
+      document.getElementById('ownerViewActions').classList.toggle('hidden', isOwnerEditing);
+      document.getElementById('ownerEditActions').classList.toggle('hidden', !isOwnerEditing);
+      document.getElementById('ownerViewBody').classList.toggle('hidden', isOwnerEditing);
+      document.getElementById('ownerEditBody').classList.toggle('hidden', !isOwnerEditing);
+
+      if (!isOwnerEditing) {
+        document.getElementById('ownerViewAvatar').src = src.avatar || getDefaultAvatar(2);
+        document.getElementById('ownerViewName').textContent = src.name || '友人帳主人';
+        document.getElementById('ownerViewNickname').textContent = src.nickname ? `(${src.nickname})` : '';
+        document.getElementById('ownerViewBirthday').textContent = src.birthday
+          ? `生辰：${formatBirthdayDisplay(src.birthday)}`
+          : '未設定生辰';
+
+        const contactEl = document.getElementById('ownerViewContact');
+        if (src.contact) {
+          contactEl.textContent = `聯絡方式：${src.contact}`;
+          contactEl.classList.remove('hidden');
+        } else {
+          contactEl.classList.add('hidden');
+        }
+
+        document.getElementById('ownerViewBio').textContent = src.bio || '尚未填寫個人簡介或交友小語。';
+
+        const prefWrap = document.getElementById('ownerViewPrefWrap');
+        if (src.prefs && src.prefs.trim()) {
+          prefWrap.classList.remove('hidden');
+          document.getElementById('ownerViewPrefs').textContent = src.prefs;
+        } else {
+          prefWrap.classList.add('hidden');
+        }
+
+        const sigWrap = document.getElementById('ownerViewSigWrap');
+        if (src.signature) {
+          sigWrap.classList.remove('hidden');
+          document.getElementById('ownerViewSigImg').src = src.signature;
+          document.getElementById('ownerViewSigSeal').textContent = sealChar;
+        } else {
+          sigWrap.classList.add('hidden');
+        }
+      } else {
+        document.getElementById('ownerEditAvatar').src = src.avatar || getDefaultAvatar(2);
+        const sigImg = document.getElementById('ownerEditSigImg');
+        const sigEmpty = document.getElementById('ownerEditSigEmpty');
+        if (src.signature) {
+          sigImg.src = src.signature;
+          sigImg.classList.remove('hidden');
+          sigEmpty.classList.add('hidden');
+        } else {
+          sigImg.classList.add('hidden');
+          sigEmpty.classList.remove('hidden');
+        }
+      }
+
+      // 更新統計數據
+      const activeCount = friends.filter(f => f.status === 'active').length;
+      let logsCount = 0;
+      let photosCount = 0;
+      friends.forEach(f => {
+        const logs = f.logs || [];
+        logsCount += logs.length;
+        logs.forEach(l => {
+          photosCount += (l.photos || []).length;
+        });
+      });
+      document.getElementById('statFriendsCount').textContent = activeCount;
+      document.getElementById('statLogsCount').textContent = logsCount;
+      document.getElementById('statPhotosCount').textContent = photosCount;
+    }
+
+    function enterOwnerEditMode() {
+      ownerDraft = JSON.parse(JSON.stringify(ownerProfile));
+      isOwnerEditing = true;
+
+      document.getElementById('editOwnerName').value = ownerDraft.name || '';
+      document.getElementById('editOwnerNickname').value = ownerDraft.nickname || '';
+      document.getElementById('editOwnerSeal').value = ownerDraft.sealChar || '契';
+      document.getElementById('editOwnerBirthday').value = ownerDraft.birthday || '';
+      document.getElementById('editOwnerContact').value = ownerDraft.contact || '';
+      document.getElementById('editOwnerBio').value = ownerDraft.bio || '';
+      document.getElementById('editOwnerPrefs').value = ownerDraft.prefs || '';
+
+      renderOwnerPage();
+    }
+
+    function cancelOwnerEditMode() {
+      isOwnerEditing = false;
+      ownerDraft = null;
+      renderOwnerPage();
+      showToast('已取消修改');
+    }
+
+    function saveOwnerEditMode() {
+      if (!ownerDraft) return;
+      const nameVal = document.getElementById('editOwnerName').value.trim();
+      if (!nameVal) {
+        showToast('請填寫你的名字');
+        return;
+      }
+
+      ownerDraft.name = nameVal;
+      ownerDraft.nickname = document.getElementById('editOwnerNickname').value.trim();
+      ownerDraft.sealChar = document.getElementById('editOwnerSeal').value.trim() || '契';
+      ownerDraft.birthday = document.getElementById('editOwnerBirthday').value;
+      ownerDraft.contact = document.getElementById('editOwnerContact').value.trim();
+      ownerDraft.bio = document.getElementById('editOwnerBio').value.trim();
+      ownerDraft.prefs = document.getElementById('editOwnerPrefs').value.trim();
+
+      ownerProfile = ownerDraft;
+      saveOwnerData();
+      isOwnerEditing = false;
+      ownerDraft = null;
+
+      renderHeaderOwnerAndBanner();
+      renderOwnerPage();
+      showToast('帳主名片已更新');
+    }
+
+    function handleOwnerAvatarUpload(event) {
+      const file = event.target.files[0];
+      if (!file || !ownerDraft) return;
+      compressSquareImage(file, (dataUrl) => {
+        ownerDraft.avatar = dataUrl;
+        renderOwnerPage();
+        showToast('已更新帳主頭像');
+      });
+    }
+
+    // ==================== 7. 圖片壓縮通用函式 ====================
     function compressSquareImage(file, callback) {
       const reader = new FileReader();
       reader.onload = function(e) {
@@ -1005,7 +1401,6 @@
       reader.readAsDataURL(file);
     }
 
-    // 日誌照片專用：保留完整原始比例，長邊縮放至 800px，兼顧清晰度與容量
     function compressLogPhoto(file, callback) {
       const reader = new FileReader();
       reader.onload = function(e) {
@@ -1037,8 +1432,9 @@
       reader.readAsDataURL(file);
     }
 
-    // ==================== 5. 新增契約（立契）彈窗 ====================
+    // ==================== 8. 新增契約（立契）彈窗 ====================
     function openCreateModal() {
+      updateTagSuggestionsDatalist();
       document.getElementById('createFriendModal').classList.remove('hidden');
       document.getElementById('createName').value = '';
       document.getElementById('createNickname').value = '';
@@ -1102,6 +1498,8 @@
       const img = document.getElementById('createSigImg');
       const placeholder = document.getElementById('createSigPlaceholder');
       const seal = document.getElementById('createSigSeal');
+      const sealChar = (ownerProfile.sealChar || '契').trim() || '契';
+      seal.textContent = sealChar;
       if (createSignatureDataUrl) {
         img.src = createSignatureDataUrl;
         img.classList.remove('hidden');
@@ -1142,7 +1540,7 @@
       showToast('新契約已收入友人帳');
     }
 
-    // ==================== 6. 毛筆感手寫簽名畫布 ====================
+    // ==================== 9. 毛筆感手寫簽名畫布 ====================
     let sigCanvas, sigCtx;
     let isDrawing = false;
     let lastPoint = null;
@@ -1226,12 +1624,15 @@
       } else if (signatureTargetMode === 'detail' && detailDraft) {
         detailDraft.signature = dataUrl;
         renderDetailScreen();
+      } else if (signatureTargetMode === 'owner' && ownerDraft) {
+        ownerDraft.signature = dataUrl;
+        renderOwnerPage();
       }
       closeSignatureModal();
-      showToast('契約簽署完成');
+      showToast('簽署完成');
     }
 
-    // ==================== 7. 好友契約詳情頁 & 原地編輯模式 ====================
+    // ==================== 10. 好友契約詳情頁 & 純淨個人資料編輯模式 ====================
     function openDetailModal(id) {
       const f = friends.find(item => item.id === id);
       if (!f) return;
@@ -1263,6 +1664,7 @@
       const f = friends.find(item => item.id === currentDetailId);
       if (!f) return;
 
+      updateTagSuggestionsDatalist();
       detailDraft = JSON.parse(JSON.stringify(f));
       isDetailEditing = true;
 
@@ -1306,23 +1708,45 @@
       detailDraft = null;
       renderDetailScreen();
       renderAll();
-      showToast('契約修訂已完成');
+      showToast('個人資料修訂完成');
     }
 
     function renderDetailScreen() {
       const source = isDetailEditing ? detailDraft : friends.find(item => item.id === currentDetailId);
       if (!source) return;
 
+      const sealChar = (ownerProfile.sealChar || '契').trim() || '契';
+      document.getElementById('detailSealStamp').textContent = sealChar;
+
+      // 頂部與底部控制列切換
       document.getElementById('detailViewHeader').classList.toggle('hidden', isDetailEditing);
       document.getElementById('detailEditHeader').classList.toggle('hidden', !isDetailEditing);
       document.getElementById('detailEditBottomBar').classList.toggle('hidden', !isDetailEditing);
       document.getElementById('detailDeleteSection').classList.toggle('hidden', !isDetailEditing);
 
-      document.getElementById('detailAvatar').src = source.avatar || getDefaultAvatar(1);
+      // 編輯模式時隱藏下方的「情報與送禮心願 / 互動日誌」區塊，並適度放大個人卡片
+      document.getElementById('detailSubTabsContainer').classList.toggle('hidden', isDetailEditing);
+      const mainCard = document.getElementById('detailMainCard');
+      const avatarEl = document.getElementById('detailAvatar');
+      if (isDetailEditing) {
+        mainCard.classList.remove('p-4');
+        mainCard.classList.add('p-5');
+        avatarEl.classList.remove('w-16', 'h-16');
+        avatarEl.classList.add('w-20', 'h-20');
+      } else {
+        mainCard.classList.remove('p-5');
+        mainCard.classList.add('p-4');
+        avatarEl.classList.remove('w-20', 'h-20');
+        avatarEl.classList.add('w-16', 'h-16');
+      }
+
+      // 頭像與頭像編輯按鈕
+      avatarEl.src = source.avatar || getDefaultAvatar(1);
       document.getElementById('detailAvatarEditOverlay').classList.toggle('hidden', !isDetailEditing);
       const isCustomAvatar = source.avatar && !source.avatar.startsWith('data:image/svg+xml');
       document.getElementById('detailAvatarRemoveBtn').classList.toggle('hidden', !(isDetailEditing && isCustomAvatar));
 
+      // 基本資訊：瀏覽態 vs 編輯態
       document.getElementById('detailIdentityView').classList.toggle('hidden', isDetailEditing);
       document.getElementById('detailIdentityEdit').classList.toggle('hidden', !isDetailEditing);
 
@@ -1336,12 +1760,14 @@
         renderDetailBondButtons();
       }
 
+      // 相遇契機
       document.getElementById('detailContext').classList.toggle('hidden', isDetailEditing);
       document.getElementById('detailContextEditWrap').classList.toggle('hidden', !isDetailEditing);
       if (!isDetailEditing) {
         document.getElementById('detailContext').textContent = source.context ? `相遇契機：${source.context}` : '尚未記錄相遇契機';
       }
 
+      // 手寫簽名區塊
       const sigWrap = document.getElementById('detailSignatureWrap');
       const sigImg = document.getElementById('detailSignatureImg');
       const sigEmptyHint = document.getElementById('detailSignatureEmptyHint');
@@ -1372,10 +1798,9 @@
         } else {
           sigWrap.classList.add('hidden');
         }
+        renderDetailPreferences(source);
+        renderDetailLogs(source);
       }
-
-      renderDetailPreferences(source);
-      renderDetailLogs(source);
     }
 
     function renderDetailBondButtons() {
@@ -1383,7 +1808,7 @@
       const container = document.getElementById('editDetailBondGroup');
       container.innerHTML = [1, 2, 3, 4, 5].map(level => {
         const active = level <= (detailDraft.bondLevel || 3);
-        return `<button type="button" onclick="setDetailDraftBond(${level})" class="sketch-btn px-2 py-0.5 text-[11px] ${active ? 'bg-[#A3CE8B]/75 font-bold' : 'bg-[#FAF8F3] text-[#8C857B]'}">✦${level}</button>`;
+        return `<button type="button" onclick="setDetailDraftBond(${level})" class="sketch-btn px-2.5 py-1 text-xs ${active ? 'bg-[#A3CE8B]/75 font-bold' : 'bg-[#FAF8F3] text-[#8C857B]'}">✦${level}</button>`;
       }).join('');
     }
 
@@ -1425,10 +1850,6 @@
       taboo: { label: '注意事項', color: 'bg-[#D9B3B0]/60' }
     };
 
-    function getActiveDetailTarget() {
-      return isDetailEditing ? detailDraft : friends.find(item => item.id === currentDetailId);
-    }
-
     function renderDetailPreferences(friend) {
       const container = document.getElementById('detailPrefList');
       const prefs = friend.preferences || [];
@@ -1439,19 +1860,6 @@
 
       container.innerHTML = prefs.map(p => {
         const meta = CATEGORY_LABELS[p.category] || CATEGORY_LABELS.topic;
-        if (isDetailEditing) {
-          return `
-            <div class="sketch-box p-2.5 flex items-center gap-2">
-              <span class="sketch-pill ${meta.color} px-2 py-0.5 text-[10px] shrink-0">${meta.label}</span>
-              <input
-                type="text"
-                value="${escapeAttr(p.content)}"
-                oninput="updateDraftPreference('${p.id}', this.value)"
-                class="flex-1 text-xs inline-edit-input"
-              />
-              <button onclick="deletePreference('${friend.id}', '${p.id}')" class="text-xs text-[#B83A2D] px-1.5 font-bold">✕</button>
-            </div>`;
-        }
         return `
           <div class="sketch-box p-3 flex items-center justify-between gap-2">
             <div class="flex items-start gap-2 flex-1">
@@ -1469,14 +1877,8 @@
       }).join('');
     }
 
-    function updateDraftPreference(prefId, newContent) {
-      if (!detailDraft) return;
-      const p = (detailDraft.preferences || []).find(item => item.id === prefId);
-      if (p) p.content = newContent;
-    }
-
     function addPreference() {
-      const target = getActiveDetailTarget();
+      const target = friends.find(item => item.id === currentDetailId);
       if (!target) return;
       const category = document.getElementById('newPrefCategory').value;
       const content = document.getElementById('newPrefContent').value.trim();
@@ -1494,32 +1896,32 @@
       });
 
       document.getElementById('newPrefContent').value = '';
-      if (!isDetailEditing) saveData();
+      saveData();
       renderDetailPreferences(target);
       showToast('已寫入情報庫');
     }
 
     function toggleWishFulfilled(friendId, prefId) {
-      const target = isDetailEditing ? detailDraft : friends.find(item => item.id === friendId);
+      const target = friends.find(item => item.id === friendId);
       if (!target) return;
       const p = (target.preferences || []).find(item => item.id === prefId);
       if (p) {
         p.fulfilled = !p.fulfilled;
-        if (!isDetailEditing) saveData();
+        saveData();
         if (currentDetailId === friendId) renderDetailPreferences(target);
         renderBirthdaysAndWishlist();
       }
     }
 
     function deletePreference(friendId, prefId) {
-      const target = isDetailEditing ? detailDraft : friends.find(item => item.id === friendId);
+      const target = friends.find(item => item.id === friendId);
       if (!target) return;
       target.preferences = (target.preferences || []).filter(item => item.id !== prefId);
-      if (!isDetailEditing) saveData();
+      saveData();
       renderDetailPreferences(target);
     }
 
-    // ==================== 8. 互動日誌與圖片拍照附圖功能 ====================
+    // ==================== 11. 互動日誌與圖片拍照附圖功能 ====================
     function handleNewLogPhotos(event) {
       const files = Array.from(event.target.files || []);
       if (!files.length) return;
@@ -1573,40 +1975,6 @@
 
       container.innerHTML = logs.map(log => {
         const photos = log.photos || [];
-
-        if (isDetailEditing) {
-          const editPhotosHtml = `
-            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pt-1">
-              ${photos.map((src, pIdx) => `
-                <div class="relative shrink-0">
-                  <img src="${src}" class="w-14 h-14 object-cover sketch-photo bg-white" />
-                  <button
-                    type="button"
-                    onclick="deleteDraftLogPhoto('${log.id}', ${pIdx})"
-                    class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#FAF8F3] border border-[#383633] text-[9px] flex items-center justify-center"
-                  >✕</button>
-                </div>
-              `).join('')}
-              <label class="w-14 h-14 shrink-0 rounded-xl border border-dashed border-[#6FB3D2] bg-[#FCFBF7] flex flex-col items-center justify-center cursor-pointer text-[10px] text-[#655F56]">
-                <span class="text-sm leading-none">+</span>
-                <span>加照</span>
-                <input type="file" accept="image/*" multiple class="hidden" onchange="addDraftLogPhotos('${log.id}', event)" />
-              </label>
-            </div>`;
-
-          return `
-            <div class="sketch-box p-3 space-y-2">
-              <div class="flex items-center gap-2">
-                <input type="date" value="${escapeAttr(log.date)}" oninput="updateDraftLog('${log.id}', 'date', this.value)" class="text-[11px] inline-edit-input" />
-                <input type="text" value="${escapeAttr(log.location || '')}" placeholder="地點" oninput="updateDraftLog('${log.id}', 'location', this.value)" class="flex-1 text-[11px] inline-edit-input" />
-                <button onclick="deleteLog('${friend.id}', '${log.id}')" class="text-xs text-[#B83A2D] font-bold px-1">✕</button>
-              </div>
-              <textarea rows="2" oninput="updateDraftLog('${log.id}', 'notes', this.value)" class="w-full text-xs inline-edit-input">${escapeHtml(log.notes)}</textarea>
-              ${editPhotosHtml}
-            </div>`;
-        }
-
-        // 瀏覽模式：渲染照片縮圖列（點擊可放大）
         const viewPhotosHtml = photos.length > 0
           ? `<div class="flex gap-2 overflow-x-auto no-scrollbar pt-1.5">
               ${photos.map((src, pIdx) => `
@@ -1636,50 +2004,13 @@
       }).join('');
     }
 
-    function updateDraftLog(logId, field, value) {
-      if (!detailDraft) return;
-      const log = (detailDraft.logs || []).find(item => item.id === logId);
-      if (log) log[field] = value;
-    }
-
-    function deleteDraftLogPhoto(logId, photoIndex) {
-      if (!detailDraft) return;
-      const log = (detailDraft.logs || []).find(item => item.id === logId);
-      if (log && Array.isArray(log.photos)) {
-        log.photos.splice(photoIndex, 1);
-        renderDetailLogs(detailDraft);
-      }
-    }
-
-    function addDraftLogPhotos(logId, event) {
-      if (!detailDraft) return;
-      const log = (detailDraft.logs || []).find(item => item.id === logId);
-      const files = Array.from(event.target.files || []);
-      if (!log || !files.length) return;
-
-      log.photos = log.photos || [];
-      let done = 0;
-      files.forEach(file => {
-        compressLogPhoto(file, (dataUrl) => {
-          log.photos.push(dataUrl);
-          done++;
-          if (done === files.length) {
-            renderDetailLogs(detailDraft);
-            showToast(`已補上 ${files.length} 張照片`);
-          }
-        });
-      });
-      event.target.value = '';
-    }
-
     function addInteractionLog() {
-      const target = getActiveDetailTarget();
+      const target = friends.find(item => item.id === currentDetailId);
       if (!target) return;
       const date = document.getElementById('newLogDate').value || new Date().toISOString().split('T')[0];
       const location = document.getElementById('newLogLocation').value.trim();
       const notes = document.getElementById('newLogNotes').value.trim();
 
-      // 允許純寫文字、或純拍照片加日期地點、或圖文並茂
       if (!notes && pendingNewLogPhotos.length === 0) {
         showToast('請輸入互動內容或附上一張照片');
         return;
@@ -1699,22 +2030,23 @@
       pendingNewLogPhotos = [];
       renderNewLogPhotosPreview();
 
-      if (!isDetailEditing) saveData();
+      saveData();
       renderDetailLogs(target);
+      renderOwnerPage();
       showToast('已記下一筆互動日誌');
     }
 
     function deleteLog(friendId, logId) {
-      const target = isDetailEditing ? detailDraft : friends.find(item => item.id === friendId);
+      const target = friends.find(item => item.id === friendId);
       if (!target) return;
       target.logs = (target.logs || []).filter(item => item.id !== logId);
-      if (!isDetailEditing) saveData();
+      saveData();
       renderDetailLogs(target);
+      renderOwnerPage();
     }
 
-    // 全螢幕燈箱檢視日誌照片
     function openPhotoLightbox(logId, photoIndex) {
-      const target = getActiveDetailTarget();
+      const target = friends.find(item => item.id === currentDetailId);
       if (!target) return;
       const log = (target.logs || []).find(item => item.id === logId);
       if (!log || !log.photos || !log.photos[photoIndex]) return;
@@ -1730,7 +2062,7 @@
       document.getElementById('lightboxImg').src = '';
     }
 
-    // ==================== 9. 歸還名字（封存）與徹底刪除 ====================
+    // ==================== 12. 歸還名字（封存）與徹底刪除 ====================
     function confirmArchiveFriend(id) {
       const f = friends.find(item => item.id === id);
       if (!f) return;
@@ -1772,18 +2104,24 @@
       );
     }
 
-    // ==================== 10. JSON 備份匯出與匯入 ====================
+    // ==================== 13. JSON 完整備份匯出與匯入（含帳主名片與友人名錄） ====================
     function exportBackup() {
-      const dataStr = JSON.stringify(friends, null, 2);
+      const bundle = {
+        version: 2,
+        exportedAt: new Date().toISOString(),
+        owner: ownerProfile,
+        friends: friends
+      };
+      const dataStr = JSON.stringify(bundle, null, 2);
       const blob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       const dateStr = new Date().toISOString().split('T')[0];
       a.href = url;
-      a.download = `友人帳備份_${dateStr}.json`;
+      a.download = `友人帳完整備份_${dateStr}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      showToast('已匯出 JSON 備份檔');
+      showToast('已匯出完整備份檔');
     }
 
     function importBackup(event) {
@@ -1798,6 +2136,15 @@
             saveData();
             renderAll();
             showToast(`成功還原 ${friends.length} 份契約`);
+          } else if (parsed && Array.isArray(parsed.friends)) {
+            friends = parsed.friends;
+            if (parsed.owner) {
+              ownerProfile = { ...INITIAL_OWNER, ...parsed.owner };
+              saveOwnerData();
+            }
+            saveData();
+            renderAll();
+            showToast(`成功還原帳主名片與 ${friends.length} 份契約`);
           } else {
             showToast('備份檔格式不正確');
           }
@@ -1822,7 +2169,7 @@
       );
     }
 
-    // ==================== 11. 工具函式 ====================
+    // ==================== 14. 工具函式 ====================
     function showToast(msg) {
       const box = document.getElementById('toastBox');
       box.textContent = msg;
@@ -1857,72 +2204,7 @@
       return escapeHtml(str).replace(/'/g, '&#39;');
     }
 
-    // 自動繪製 512x512 水彩手繪「契」字 PNG 圖示供手機桌面使用
-    function generateAppIcon() {
-      const canvas = document.createElement('canvas');
-      canvas.width = 512;
-      canvas.height = 512;
-      const ctx = canvas.getContext('2d');
-
-      // 1. 和紙米白底色
-      ctx.fillStyle = '#F3EFE6';
-      ctx.fillRect(0, 0, 512, 512);
-
-      // 2. 晴空藍與草地綠水彩暈染
-      const skyGrad = ctx.createRadialGradient(130, 120, 20, 150, 140, 280);
-      skyGrad.addColorStop(0, 'rgba(111, 179, 210, 0.55)');
-      skyGrad.addColorStop(1, 'rgba(168, 213, 229, 0)');
-      ctx.fillStyle = skyGrad;
-      ctx.fillRect(0, 0, 512, 512);
-
-      const grassGrad = ctx.createRadialGradient(380, 400, 20, 360, 380, 260);
-      grassGrad.addColorStop(0, 'rgba(125, 184, 101, 0.45)');
-      grassGrad.addColorStop(1, 'rgba(163, 206, 139, 0)');
-      ctx.fillStyle = grassGrad;
-      ctx.fillRect(0, 0, 512, 512);
-
-      // 3. 手繪捲雲裝飾
-      ctx.strokeStyle = 'rgba(56, 54, 51, 0.35)';
-      ctx.lineWidth = 5;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(95, 145);
-      ctx.bezierCurveTo(60, 145, 55, 105, 95, 100);
-      ctx.bezierCurveTo(105, 65, 165, 60, 185, 90);
-      ctx.bezierCurveTo(220, 65, 275, 80, 280, 115);
-      ctx.bezierCurveTo(315, 115, 320, 145, 285, 145);
-      ctx.closePath();
-      ctx.stroke();
-
-      // 4. 中央朱紅「契」字印章
-      ctx.save();
-      ctx.translate(256, 275);
-      ctx.rotate(-0.06);
-
-      ctx.fillStyle = 'rgba(184, 58, 45, 0.08)';
-      ctx.strokeStyle = '#B83A2D';
-      ctx.lineWidth = 14;
-      ctx.beginPath();
-      ctx.roundRect(-125, -125, 250, 250, 24);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = '#B83A2D';
-      ctx.font = 'bold 165px "Yuji Syuku", "STKaiti", "KaiTi", serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('契', 0, 8);
-      ctx.restore();
-
-      const pngUrl = canvas.toDataURL('image/png');
-      const appleIcon = document.getElementById('appleTouchIcon');
-      const favIcon = document.getElementById('appFavicon');
-      if (appleIcon) appleIcon.href = pngUrl;
-      if (favIcon) favIcon.href = pngUrl;
-    }
-
     window.onload = function() {
-      generateAppIcon();
       loadData();
       renderAll();
     };

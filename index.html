@@ -7,6 +7,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="友人帳" />
   <title>友人帳｜水彩手繪契約簿</title>
+  <link id="appleTouchIcon" rel="apple-touch-icon" sizes="180x180" href="" />
+  <link id="appFavicon" rel="icon" type="image/png" href="" />
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -1855,7 +1857,72 @@
       return escapeHtml(str).replace(/'/g, '&#39;');
     }
 
+    // 自動繪製 512x512 水彩手繪「契」字 PNG 圖示供手機桌面使用
+    function generateAppIcon() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      // 1. 和紙米白底色
+      ctx.fillStyle = '#F3EFE6';
+      ctx.fillRect(0, 0, 512, 512);
+
+      // 2. 晴空藍與草地綠水彩暈染
+      const skyGrad = ctx.createRadialGradient(130, 120, 20, 150, 140, 280);
+      skyGrad.addColorStop(0, 'rgba(111, 179, 210, 0.55)');
+      skyGrad.addColorStop(1, 'rgba(168, 213, 229, 0)');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, 512, 512);
+
+      const grassGrad = ctx.createRadialGradient(380, 400, 20, 360, 380, 260);
+      grassGrad.addColorStop(0, 'rgba(125, 184, 101, 0.45)');
+      grassGrad.addColorStop(1, 'rgba(163, 206, 139, 0)');
+      ctx.fillStyle = grassGrad;
+      ctx.fillRect(0, 0, 512, 512);
+
+      // 3. 手繪捲雲裝飾
+      ctx.strokeStyle = 'rgba(56, 54, 51, 0.35)';
+      ctx.lineWidth = 5;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(95, 145);
+      ctx.bezierCurveTo(60, 145, 55, 105, 95, 100);
+      ctx.bezierCurveTo(105, 65, 165, 60, 185, 90);
+      ctx.bezierCurveTo(220, 65, 275, 80, 280, 115);
+      ctx.bezierCurveTo(315, 115, 320, 145, 285, 145);
+      ctx.closePath();
+      ctx.stroke();
+
+      // 4. 中央朱紅「契」字印章
+      ctx.save();
+      ctx.translate(256, 275);
+      ctx.rotate(-0.06);
+
+      ctx.fillStyle = 'rgba(184, 58, 45, 0.08)';
+      ctx.strokeStyle = '#B83A2D';
+      ctx.lineWidth = 14;
+      ctx.beginPath();
+      ctx.roundRect(-125, -125, 250, 250, 24);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#B83A2D';
+      ctx.font = 'bold 165px "Yuji Syuku", "STKaiti", "KaiTi", serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('契', 0, 8);
+      ctx.restore();
+
+      const pngUrl = canvas.toDataURL('image/png');
+      const appleIcon = document.getElementById('appleTouchIcon');
+      const favIcon = document.getElementById('appFavicon');
+      if (appleIcon) appleIcon.href = pngUrl;
+      if (favIcon) favIcon.href = pngUrl;
+    }
+
     window.onload = function() {
+      generateAppIcon();
       loadData();
       renderAll();
     };
